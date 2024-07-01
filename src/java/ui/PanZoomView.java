@@ -9,6 +9,7 @@ import model.PanZoomTrial;
 import moose.Memo;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
+import tool.MoRect;
 import tool.Resources;
 
 import javax.swing.*;
@@ -169,19 +170,18 @@ public class PanZoomView extends JPanel
         setBorder(BORDERS.BLACK_BORDER);
 
         // Set position
-        planePos = new MoPoint(0,0);
+        planePos = new MoPoint();
 //        planePos = new MoPoint(
 //                -(planesDim.width - getWidth())/2,
 //                -(planesDim.height - getHeight())/2);
 
         // Create planes (w/ this as initial dimension)
-        conLog.info("Size = {}; Pos = {}", getSize(), planePos);
         plainPlane = new MoPlane(Resources.SVG.PLAN_URI);
         plainPlane.setBounds(planePos, getSize());
 
         trialPlane = new MoPlane(Resources.SVG.PLAN_URI);
         trialPlane.setBounds(planePos, getSize());
-        trialPlane.setTrialParts(trial.roomNum, 30);
+        trialPlane.setTrialParts(1, 30);
 
 //        plainPlane.setup(Resources.SVG.PLAN_URI);
 //        trialPlane.setup(Resources.SVG.PLAN_URI);
@@ -277,22 +277,22 @@ public class PanZoomView extends JPanel
 //        thresholdSVGIcon.paintIcon(this, g, thresholdPos.x, thresholdPos.y);
     }
 
-    private void colorThreshold(String color) {
-        SVGDiagram thresholdSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.SVG.THRESH_URI);
-        SVGRoot thresholdSvgRoot = thresholdSvgDiagram.getRoot();
-
-        List<SVGElement> children = new ArrayList<>();
-        thresholdSvgRoot.getChildren(children);
-
-        try {
-            children.get(0).setAttribute("stroke", 1, color);
-            children.get(1).setAttribute("stroke", 1, color);
-        } catch (SVGElementException e) {
-            conLog.warn("Element not found!");
-        }
-
-        repaint();
-    }
+//    private void colorThreshold(String color) {
+//        SVGDiagram thresholdSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.SVG.THRESH_URI);
+//        SVGRoot thresholdSvgRoot = thresholdSvgDiagram.getRoot();
+//
+//        List<SVGElement> children = new ArrayList<>();
+//        thresholdSvgRoot.getChildren(children);
+//
+//        try {
+//            children.get(0).setAttribute("stroke", 1, color);
+//            children.get(1).setAttribute("stroke", 1, color);
+//        } catch (SVGElementException e) {
+//            conLog.warn("Element not found!");
+//        }
+//
+//        repaint();
+//    }
 
     private Point getCurPoint() {
         final Point p = MouseInfo.getPointerInfo().getLocation();
@@ -610,10 +610,28 @@ public class PanZoomView extends JPanel
         dragPoint = null;
     }
 
-    public boolean areCirclesInsideView() {
+    public boolean isViewAlignedToDest() {
+        // Get the zoom dest sqs coords relative to this view
+        MoRect destMaxZoomSq = trialPlane.getDestMaxZoomSq();
+        MoRect destMinZoomSq = trialPlane.getDestMinZoomSq();
+        destMaxZoomSq.setOrigin(planePos);
+        destMinZoomSq.setOrigin(planePos);
+
+        // Create the rectangle for the view
+        MoRect viewRect = new MoRect(0, 0, getWidth(), getHeight());
+
+        // Check if the circles are fully inside the view (i.e., the min zoom sq is inside the view)
+        final boolean areCirclesVisible = viewRect.contains(destMaxZoomSq);
+
+//        conLog.info("PlanePos = {}", planePos);
+//        conLog.info("Inside? {}", viewRect.contains(destMaxZoomSq));
 //        conLog.info("planeDim = {}; minRect: {}; maxRect: {}", planeDim, minZoomSq, maxZoomSq);
 
-        return false;
+        // Check if no walls are shown (i.e., view is inside the max zoom sq)
+        conLog.info("Walls not showing: {}", destMinZoomSq.contains(viewRect));
+        conLog.info("View: {}; Dest Zoom Sq: {}", viewRect, destMinZoomSq);
+
+        return viewRect.contains(destMaxZoomSq);
     }
 
     //----------------------------------------------------------------------------------------------------

@@ -72,8 +72,8 @@ public class TaskPanel extends JLayeredPane {
     protected void endTrial(int status) {
         Logex.get().logEvent(TrialEvent.TRIAL_CLOSE);
         double openToClose = Logex.get().getDurationSec(TrialEvent.TRIAL_OPEN, TrialEvent.TRIAL_CLOSE);
-        conLog.info("Time: Open to Close = {}", openToClose);
-        conLog.info("--------------------------");
+        conLog.debug("Time: Open to Close = {}", openToClose);
+        conLog.debug("--------------------------");
         if (status == TrialStatus.HIT) {
             if (activeBlock.isBlockFinished(activeTrial.trialNum)) { // Block finished -> show break|end
                 conLog.info("Block Finished");

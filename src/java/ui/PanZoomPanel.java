@@ -5,7 +5,6 @@ import enums.Task;
 import enums.TrialEvent;
 import enums.TrialStatus;
 import model.BaseBlock;
-import model.MoPoint;
 import model.PanZoomTrial;
 import moose.Moose;
 import org.tinylog.Logger;
@@ -132,7 +131,7 @@ public class PanZoomPanel
             public void actionPerformed(ActionEvent e) {
                 conLog.info("SPACE Pressed");
                 final boolean result = wasTrialSeccess();
-                conLog.info("Result = {}", result);
+                conLog.debug("Result = {}", result);
                 remove(panZoomView);
 //                Resources.SVG.refresh();
                 endTrial(TrialStatus.HIT);
@@ -235,8 +234,7 @@ public class PanZoomPanel
     @Override
     protected boolean wasTrialSeccess() {
         // Check the circles inside the square
-        panZoomView.areCirclesInsideView();
-        return false;
+        return panZoomView.isViewAlignedToDest();
     }
 
     // Actions -----------------------------------------------------------------------------------
@@ -257,7 +255,7 @@ public class PanZoomPanel
                     TrialEvent.getFirst(TrialEvent.ZOOM),
                     TrialEvent.getLast(TrialEvent.ZOOM));
 
-            conLog.info("En->lZ = {}, fZ->lZ = {}", enterToLastZoom, firstZoomToLastZoom);
+            conLog.debug("En->lZ = {}, fZ->lZ = {}", enterToLastZoom, firstZoomToLastZoom);
 
             endTrial(TrialStatus.HIT);
         }

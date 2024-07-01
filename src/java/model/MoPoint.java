@@ -4,6 +4,10 @@ import java.awt.*;
 
 public class MoPoint extends Point {
 
+    public MoPoint() {
+
+    }
+
     public MoPoint(Point p) {
         this.x = p.x;
         this.y = p.y;

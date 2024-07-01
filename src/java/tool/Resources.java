@@ -27,7 +27,7 @@ public class Resources {
         static {
             try {
                 // Load the SVG resources
-                PLAN_URI = Objects.requireNonNull(SVG.class.getResource("/plan-v4.svg")).toURI();
+                PLAN_URI = Objects.requireNonNull(SVG.class.getResource("/plan4.svg")).toURI();
 
                 THRESH_URI = Objects.requireNonNull(SVG.class.getResource("/threshold.svg")).toURI();
                 THRESH_200_URI = Objects.requireNonNull(SVG.class.getResource("/threshold200.svg")).toURI();

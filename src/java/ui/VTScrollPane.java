@@ -304,7 +304,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         velocity += v;
         new Thread(() -> {
             while (isScrolling && Math.abs(velocity) > 10) {
-                final int dY = (int) (velocity * 0.1); // 0.1s => 0.1Vel px
+                final int dY = (int) (velocity * 1.0); // 0.1s => 0.1Vel px
                 scroll(dY);
                 velocity *= 0.9; // Friction
                 try {
