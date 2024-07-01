@@ -4,7 +4,7 @@ import control.Logex;
 import enums.Task;
 import enums.TrialEvent;
 import enums.TrialStatus;
-import model.BaseBlock;
+import model.Block;
 import model.PanZoomTrial;
 import moose.Moose;
 import org.tinylog.Logger;
@@ -159,7 +159,7 @@ public class PanZoomPanel
         super.createBlocks();
 
         for (int i = 0; i < NUM_ZOOM_BLOCKS; i++) {
-            blocks.add(new BaseBlock(i + 1, task, 1));
+            blocks.add(new Block(i + 1, task, 1));
         }
     }
 

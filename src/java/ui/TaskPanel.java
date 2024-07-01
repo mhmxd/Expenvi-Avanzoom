@@ -3,8 +3,8 @@ package ui;
 import control.Logex;
 import enums.TrialEvent;
 import enums.TrialStatus;
-import model.BaseBlock;
-import model.BaseTrial;
+import model.Block;
+import model.Trial;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 
@@ -22,9 +22,9 @@ public class TaskPanel extends JLayeredPane {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     // Experiment
-    protected ArrayList<BaseBlock> blocks = new ArrayList<>();
-    protected BaseBlock activeBlock;
-    protected BaseTrial activeTrial;
+    protected ArrayList<Block> blocks = new ArrayList<>();
+    protected Block activeBlock;
+    protected Trial activeTrial;
 
     // UI
     JLabel progressLabel = new JLabel();

@@ -2,12 +2,12 @@ package model;
 
 import enums.Task;
 
-public class ZoomTrial extends BaseTrial {
+public class ZoomTrial extends Trial {
     public final int startNotch;
     public final int targetNotch;
 
     public ZoomTrial(Task task, int startNotch, int targetNotch) {
-        super(task);
+        super();
 
         this.startNotch = startNotch;
         this.targetNotch = targetNotch;
@@ -17,7 +17,7 @@ public class ZoomTrial extends BaseTrial {
     public String toString() {
         return "ZoomTrial{" +
                 "id=" + id +
-                ", task='" + task + '\'' +
+//                ", task='" + task + '\'' +
                 ", blockNum=" + blockNum +
                 ", trialNum=" + trialNum +
                 " startNotch=" + startNotch +

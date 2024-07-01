@@ -4,7 +4,7 @@ import control.Logex;
 import enums.Task;
 import enums.TrialEvent;
 import enums.TrialStatus;
-import model.BaseBlock;
+import model.Block;
 import model.PanTrial;
 import moose.Moose;
 import org.tinylog.Logger;
@@ -67,7 +67,7 @@ public class PanTaskPanel extends TaskPanel {
         super.createBlocks();
 
         for (int i = 0; i < ExpFrame.NUM_PAN_BLOCKS; i++) {
-            blocks.add(new BaseBlock(i + 1, task, 1));
+            blocks.add(new Block(i + 1, task, 1));
         }
     }
 

@@ -2,7 +2,7 @@ package control;
 
 import enums.ErrorEvent;
 import enums.TrialEvent;
-import model.BaseTrial;
+import model.Trial;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 
@@ -15,7 +15,7 @@ public class Logex {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
     private static Logex self;
 
-    private BaseTrial activeTrial;
+    private Trial activeTrial;
 
     private final Map<String, TrialEvent> trialLogs = new HashMap<>(); // Keys: TrialEvent strings
     private final Map<String, ErrorEvent> errorLogs = new HashMap<>(); // Keys: ErrorEvent strings
@@ -38,9 +38,9 @@ public class Logex {
 
     /**
      * Start logging events for this trial
-     * @param trial BaseTrial
+     * @param trial Trial
      */
-    public void activateTrial(BaseTrial trial) {
+    public void activateTrial(Trial trial) {
         activeTrial = trial;
 
         // Clear the log maps

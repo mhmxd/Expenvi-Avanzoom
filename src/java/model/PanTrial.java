@@ -6,13 +6,13 @@ import java.net.URI;
 
 import static tool.Resources.SVG;
 
-public class PanTrial extends BaseTrial {
+public class PanTrial extends Trial {
     public int level;
     public URI uri;
     public Integer rotation;
 
     public PanTrial(int level, Integer rotation) {
-        super(Task.PAN);
+        super();
         this.level = level;
 
         switch (level) {

@@ -5,7 +5,7 @@ import enums.Task;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PanZoomTrial extends BaseTrial {
+public class PanZoomTrial extends Trial {
     public double initZoomLvl;
     public int roomNum;
 
@@ -23,7 +23,7 @@ public class PanZoomTrial extends BaseTrial {
     }
 
     public PanZoomTrial(int roomInd, double initZoomLvl) {
-        super(Task.PAN_ZOOM);
+        super();
 
         this.initZoomLvl = initZoomLvl;
         this.roomNum = roomInd + 1;

@@ -1,7 +1,7 @@
 package ui;
 
 import enums.Task;
-import model.BaseBlock;
+import model.Block;
 import moose.Moose;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
@@ -70,7 +70,7 @@ public class ScrollPanel extends TaskPanel{
     protected void createBlocks() {
         super.createBlocks();
         for (int i = 0; i < NUM_ZOOM_BLOCKS; i++) {
-            blocks.add(new BaseBlock(i + 1, task, NUM_ZOOM_REPS));
+            blocks.add(new Block(i + 1, task, NUM_ZOOM_REPS));
         }
     }
 

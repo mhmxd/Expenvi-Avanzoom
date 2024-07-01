@@ -1,18 +1,15 @@
 package model;
 
-import enums.Task;
-
-abstract public class BaseTrial {
+abstract public class Trial {
     public int id;
-    public final Task task;
+//    public final Task task;
     public int blockNum;
     public int trialNum;
 //    public final int level;
     public boolean finished;
     public int retries;
 
-    public BaseTrial(Task task) {
-        this.task = task;
+    public Trial() {
 //        this.level = level;
         this.finished = false;
         this.retries = 0;
@@ -20,9 +17,9 @@ abstract public class BaseTrial {
 
     @Override
     public String toString() {
-        return "BaseTrial{" +
+        return "Trial{" +
                 "id=" + id +
-                ", task='" + task + '\'' +
+//                ", task='" + task + '\'' +
                 ", blockId=" + blockNum +
                 ", trialNum=" + trialNum +
                 ", finished=" + finished +

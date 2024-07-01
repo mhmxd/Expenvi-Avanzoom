@@ -1,6 +1,5 @@
 package ui;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import control.Server;
 import moose.Memo;
 import org.tinylog.Logger;
@@ -28,14 +27,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static tool.Constants.*;
 
 public class VTScrollPane extends JScrollPane implements MouseListener, MouseWheelListener, PropertyChangeListener {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
-    public static final int WRAP_CHARS_COUNT = 70;
 //    private final int WRAP_CHARS_COUNT = 67;
 //    private final String WRAPPED_FILE_NAME = "./res/wrapped.txt";
 
@@ -58,9 +55,10 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     private boolean mTargetVisible;
     private int mLastScrollVal;  // Keep the last scroll value {to calculate the diff}
     private boolean wheelEnabled;
-    private boolean isScrolling; // To continue scrolling
+    private boolean continueScrolling; // To continue scrolling
 
     private double velocity; // px/s
+    private final double VELOCITY_GAIN = 1.0;
 
     // For logging
 //    private GeneralInfo mGenInfo = new GeneralInfo();
@@ -68,6 +66,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 //    private ScrollInfo mScrollInfo = new ScrollInfo();
     private int nTargetAppear;
 
+    // Local Constants
     private final Color COLOR_VIEW_BORDER = COLORS.PLATINIUM;
     private final Color COLOR_LINE_NUM_BACK = COLORS.LIGHT_GRAY;
     private final Color COLOR_SCROLLBAR_TRACK = COLORS.VERY_LIGHT_GRAY;
@@ -75,6 +74,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     private final Color COLOR_LINE_HIGHLIGHT = COLORS.BLUE;
     private final Color COLOR_INDICATOR = COLORS.DARK_GREEN;
 
+    private final int WRAP_CHARS_COUNT = 67;
     private final float TEXT_FONT_SIZE = 20.5f;
     private final float TEXT_LINE_SPACING = 0.193f;
 
@@ -300,11 +300,14 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 
     }
 
-    private void scroll(double v) {
+    private void fling(double v) {
+        conLog.info("Fling with v = {}", v);
         velocity += v;
+        conLog.info("Veloctity = {}", velocity);
         new Thread(() -> {
-            while (isScrolling && Math.abs(velocity) > 10) {
-                final int dY = (int) (velocity * 1.0); // 0.1s => 0.1Vel px
+            conLog.info("Thread!! {}, {}", continueScrolling, Math.abs(velocity) );
+            while (continueScrolling && Math.abs(velocity) > 10) {
+                final int dY = (int) (velocity * 0.1); // 0.1s => 0.1Vel px
                 scroll(dY);
                 velocity *= 0.9; // Friction
                 try {
@@ -318,7 +321,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 
     private void stopScroll() {
         conLog.info("Stop!");
-        isScrolling = false;
+        continueScrolling = false;
         velocity = 0;
     }
 
@@ -498,15 +501,13 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             Memo memo = (Memo) evt.getNewValue();
             conLog.info("Memo: {}", memo);
             if (memo.isAction(STRINGS.SCROLL)) {
-                switch (memo.getMode()) {
-                    case STRINGS.DISPLACE -> scroll(memo.getV2Int());
-                    case STRINGS.FLING -> {
-                        isScrolling = true;
-                        scroll(memo.getV2Float());
-                    }
-                    case STRINGS.STOP -> stopScroll();
-                }
+                if (memo.isMode(STRINGS.DISPLACE)) scroll(memo.getV2Int());
+                if (memo.isMode(STRINGS.STOP)) stopScroll();
+            }
 
+            if (memo.isAction(STRINGS.FLING)) {
+                continueScrolling = true;
+                fling(memo.getV2Float() * VELOCITY_GAIN);
             }
         }
     }

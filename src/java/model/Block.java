@@ -11,11 +11,11 @@ import java.util.Collections;
 
 import static ui.ExpFrame.*;
 
-public class BaseBlock {
+public class Block {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     public int blockNum;
-    public final ArrayList<BaseTrial> trials = new ArrayList<>();
+    public final ArrayList<Trial> trials = new ArrayList<>();
 
     /**
      * Constructor
@@ -23,7 +23,7 @@ public class BaseBlock {
      * @param task Which task? (ZOOM-IN, ZOOM-OUT, PAN)
      * @param repetition Number of repetitions (in each block)
      */
-    public BaseBlock(int blkNum, Task task, int repetition) {
+    public Block(int blkNum, Task task, int repetition) {
         blockNum = blkNum;
 
         switch (task) {
@@ -105,6 +105,10 @@ public class BaseBlock {
 
                  Collections.shuffle(trials);
             }
+
+            case SCROLL -> {
+
+            }
         }
 
         // Set the numbers and IDs
@@ -121,11 +125,11 @@ public class BaseBlock {
      * (uses constants from PanTaskPanel)
      */
     public void createPanTrials() {
-//        List<BaseTrial> tempList = new ArrayList<>();
+//        List<Trial> tempList = new ArrayList<>();
 //
-//        List<BaseTrial> temp1 = new ArrayList<>();
-//        List<BaseTrial> temp2 = new ArrayList<>();
-//        List<BaseTrial> temp3 = new ArrayList<>();
+//        List<Trial> temp1 = new ArrayList<>();
+//        List<Trial> temp2 = new ArrayList<>();
+//        List<Trial> temp3 = new ArrayList<>();
 //
 //        Random rand = new SecureRandom();
 //
@@ -156,7 +160,7 @@ public class BaseBlock {
 //        }
 //        Collections.shuffle(temp3);
 //
-//        List<BaseTrial> temp = new ArrayList<>();
+//        List<Trial> temp = new ArrayList<>();
 //        int sum = PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK / 3;
 //        for (int i = 0; i < 3; i++) {
 //            temp.clear();
@@ -168,7 +172,7 @@ public class BaseBlock {
 //            Collections.shuffle(temp);
 //
 //            for (int j = 0; j < temp.size(); j++) {
-//                BaseTrial t = temp.get(j);
+//                Trial t = temp.get(j);
 //                t.blockId = i + 1;
 //                t.trialNum = j + 1;
 //                t.id = t.blockId * 100 + t.trialNum;
@@ -183,7 +187,7 @@ public class BaseBlock {
      * @param trNum Trial number (starting from 1)
      * @return Trial
      */
-    public BaseTrial getTrial(int trNum) {
+    public Trial getTrial(int trNum) {
         if (trNum > trials.size()) return null;
         else return cloneTrial(trials.get(trNum - 1));
     }
@@ -202,7 +206,7 @@ public class BaseBlock {
      * @param trNum Trial number
      */
     public void reInsertTrial(int trNum) {
-        BaseTrial trial = trials.get(trNum - 1);
+        Trial trial = trials.get(trNum - 1);
         int randomIndex = Utils.randInt(trNum, trials.size());
         trials.add(randomIndex, cloneTrial(trial));
 
@@ -217,10 +221,10 @@ public class BaseBlock {
      * @param inTr Input trial
      * @return Clone trial
      */
-    public BaseTrial cloneTrial(BaseTrial inTr) {
+    public Trial cloneTrial(Trial inTr) {
         final Gson gson = new Gson();
         final String trialJSON = gson.toJson(inTr);
-        final Class<? extends BaseTrial> trialType = inTr.getClass();
+        final Class<? extends Trial> trialType = inTr.getClass();
 
         return gson.fromJson(trialJSON, trialType);
     }
