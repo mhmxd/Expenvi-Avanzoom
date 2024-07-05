@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static tool.Constants.*;
 
@@ -57,15 +56,17 @@ public class ZoomView extends JPanel
     private boolean isCursorInside = false;
     private boolean isGrabbed = false;
     private Point dragPoint;
-    private final double PAN_FRICTION = 0.2;
+//    private final double PAN_FRICTION = 0.2;
     private Point padPos = new Point(0,0); // Changed only with padding
     //    private Integer xDiff;
 //    private Integer yDiff;
     private ScheduledExecutorService panner = Executors.newSingleThreadScheduledExecutor();
 
     //– Zooming
-    private final double GAIN = 0.05;
     private int detent;
+
+    // Config (read from ExFrame.confg)
+    private int ZOOM_GAIN = 1;
 
     //– Moose receiving
     private Moose moose;
@@ -80,32 +81,32 @@ public class ZoomView extends JPanel
     };
 
     //------------------------------------------------------------------
-    private class PanTask implements Runnable {
-        int velX, velY;
-        int dX, dY;
-
-        public PanTask(double vX, double vY) {
-            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the Task)
-            velY = (int) vY; // px/s -> px/(10)ms
-        }
-
-        @Override
-        public void run() {
-
-            while (Math.abs(velX) > 0 || Math.abs(velY) > 0) {
-                conLog.info("Run: vX, vY = {}, {}", velX, velY);
-                pan(velX, velY);
-                velX *= (1 - PAN_FRICTION);
-                velY *= (1 - PAN_FRICTION);
-
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
+//    private class PanTask implements Runnable {
+//        int velX, velY;
+//        int dX, dY;
+//
+//        public PanTask(double vX, double vY) {
+//            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the Task)
+//            velY = (int) vY; // px/s -> px/(10)ms
+//        }
+//
+//        @Override
+//        public void run() {
+//
+//            while (Math.abs(velX) > 0 || Math.abs(velY) > 0) {
+//                conLog.info("Run: vX, vY = {}, {}", velX, velY);
+//                pan(velX, velY);
+//                velX *= (1 - PAN_FRICTION);
+//                velY *= (1 - PAN_FRICTION);
+//
+//                try {
+//                    Thread.sleep(5);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        }
+//    }
 
     //------------------------------------------------------------------
 
@@ -139,6 +140,9 @@ public class ZoomView extends JPanel
         addMouseWheelListener(this);
 //        moose.addMooseListener(this);
         Server.get().addPropertyChangeListener(this);
+
+        // Get configs
+        ZOOM_GAIN = ExpFrame.config.getInt(STRINGS.ZOOM_GAIN);
 
     }
 
@@ -353,8 +357,8 @@ public class ZoomView extends JPanel
 //        float t = 0f;
 //        double multiplier;
 
-        PanTask panTask = new PanTask(vX, vY);
-        panner.scheduleAtFixedRate(panTask, 0, 10, TimeUnit.MILLISECONDS);
+//        PanTask panTask = new PanTask(vX, vY);
+//        panner.scheduleAtFixedRate(panTask, 0, 10, TimeUnit.MILLISECONDS);
 
 
     }
@@ -511,7 +515,7 @@ public class ZoomView extends JPanel
 
     @Override
     public void moosePanned(Memo mem) {
-        pan(mem.getV1Float(), mem.getV1Float());
+//        pan(mem.getV1Float(), mem.getV1Float());
     }
 
     @Override
@@ -532,27 +536,11 @@ public class ZoomView extends JPanel
                 Memo memo = (Memo) evt.getNewValue();
 
                 switch (memo.getAction()) {
-//                    case STRINGS.GRAB -> {
-//                        // Grab if happened inside
-//                        if (isCursorInside) {
-//                            grab();
-//                        }
-//                    }
 
                     case STRINGS.REL -> release();
 
-//                    case STRINGS.PAN -> {
-//                        if (STRINGS.equals(memo.getMode(), STRINGS.VEL)) {
-//                            pan(memo.getV1Float() * GAIN, memo.getV2Float() * GAIN);
-//                        }
-//
-//                        if (STRINGS.equals(memo.getMode(), STRINGS.STOP)) {
-//                            panner.shutdownNow();
-//                        }
-//                    }
-
                     case STRINGS.ZOOM -> {
-                        zoom(memo.getV1Int());
+                        zoom(memo.getV1Int() * ZOOM_GAIN);
                     }
                 }
             }

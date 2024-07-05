@@ -17,7 +17,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-import static tool.Constants.COLORS;
+import static tool.Constants.*;
 import static ui.ExpFrame.NUM_ZOOM_BLOCKS;
 
 public class PanZoomPanel
@@ -27,9 +27,11 @@ public class PanZoomPanel
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     // Constants
-
-    public static final double VIEWPPORT_SIZE_mm = 250;
-    public final int VIEWPORT_SIZE = Utils.mm2px(VIEWPPORT_SIZE_mm);
+    public final double VIEWPPORT_SIZE_mm = 250;
+    public final Dimension viewportDim = new Dimension(
+            DISP.mmToPxW(VIEWPPORT_SIZE_mm),
+            DISP.mmToPxH(VIEWPPORT_SIZE_mm));
+//    public final int VIEWPORT_SIZE = Utils.mm2px(VIEWPPORT_SIZE_mm);
 
     public static final double SCROLL_VP_SIZE_mm = 200;
 //    public static final double WHEEL_STEP_SIZE = 0.25;
@@ -57,8 +59,8 @@ public class PanZoomPanel
     private final Task task;
     private final Moose moose;
     private final boolean startOnLeft;
-    private final int vpSize; // Size of the viewport in px
-    private final int scrollVPSize; // Size of the viewport in px
+//    private final int vpSize; // Size of the viewport in px
+//    private final int scrollVPSize; // Size of the viewport in px
     private final int lrMargin; // Left-right margin in px (mm comes from ExpFrame)
 
     // View
@@ -82,9 +84,9 @@ public class PanZoomPanel
         setLayout(null);
 
         startOnLeft = new Random().nextBoolean(); // Randomly choose whether to start traials on the left or right
-        vpSize = Utils.mm2px(VIEWPPORT_SIZE_mm);
-        scrollVPSize = Utils.mm2px(SCROLL_VP_SIZE_mm);
-        lrMargin = Utils.mm2px(ExpFrame.LR_MARGIN_MM);
+//        vpSize = Utils.mm2px(VIEWPPORT_SIZE_mm);
+//        scrollVPSize = Utils.mm2px(SCROLL_VP_SIZE_mm);
+        lrMargin = DISP.mmToPxW(ExpFrame.LR_MARGIN_MM);
 
         task = tsk;
         moose = ms;
@@ -187,43 +189,43 @@ public class PanZoomPanel
         // Create the viewport for showing the trial
         switch (task) {
             case PAN_ZOOM -> {
-                panZoomView = new PanZoomView(VIEWPORT_SIZE, (PanZoomTrial) activeTrial);
+                panZoomView = new PanZoomView((PanZoomTrial) activeTrial);
 //                panZoomView.setBounds(
 //                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
 //                        vpSize, vpSize);
 //                panZoomView.setBounds(0, 0, getWidth(), getHeight());
                 panZoomView.setBounds(
-                        (getWidth() - VIEWPORT_SIZE)/2, (getHeight() - VIEWPORT_SIZE)/2,
-                        VIEWPORT_SIZE, VIEWPORT_SIZE);
+                        (getWidth() - viewportDim.width) / 2, (getHeight() - viewportDim.height)/2,
+                        viewportDim.width, viewportDim.height);
 //                panZoomView.setDim(VIEWPORT_SIZE);
 //                panZoomView.setPos(new MoPoint( (getWidth() - VIEWPORT_SIZE)/2, (getHeight() - VIEWPORT_SIZE)/2));
                 panZoomView.setVisible(true);
                 add(panZoomView, JLayeredPane.PALETTE_LAYER);
             }
 
-            case ZOOM_IN, ZOOM_OUT -> {
-                zoomView = new ZoomView(task);
-                zoomView.setBounds(
-                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
-                        vpSize, vpSize);
-                zoomView.setVisible(true);
-                zoomView.setBorder(Constants.BORDERS.BLACK_BORDER);
-                add(zoomView, JLayeredPane.PALETTE_LAYER);
-            }
+//            case ZOOM_IN, ZOOM_OUT -> {
+//                zoomView = new ZoomView(task);
+//                zoomView.setBounds(
+//                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
+//                        vpSize, vpSize);
+//                zoomView.setVisible(true);
+//                zoomView.setBorder(Constants.BORDERS.BLACK_BORDER);
+//                add(zoomView, JLayeredPane.PALETTE_LAYER);
+//            }
 
-            case SCROLL -> {
-                scrollPane = new VTScrollPane(new MoDimension(scrollVPSize))
-                        .setText("lorem")
-                        .setScrollBar(VT_SCROLL_BAR_W_mm, VT_SCROLL_THUMB_H_mm)
-                        .create();
-                scrollPane.setBounds(
-                        (getWidth() - scrollVPSize)/2, (getHeight() - scrollVPSize)/2,
-                        scrollVPSize, scrollVPSize);
-                scrollPane.setLocation((getWidth() - scrollVPSize)/2, (getHeight() - scrollVPSize)/2);
-                scrollPane.setWheelEnabled(true);
-                scrollPane.setVisible(true);
-                add(scrollPane, JLayeredPane.PALETTE_LAYER);
-            }
+//            case SCROLL -> {
+//                scrollPane = new VTScrollPane(new MoDimension(scrollVPSize))
+//                        .setText("lorem")
+//                        .setScrollBar(VT_SCROLL_BAR_W_mm, VT_SCROLL_THUMB_H_mm)
+//                        .create();
+//                scrollPane.setBounds(
+//                        (getWidth() - scrollVPSize)/2, (getHeight() - scrollVPSize)/2,
+//                        scrollVPSize, scrollVPSize);
+//                scrollPane.setLocation((getWidth() - scrollVPSize)/2, (getHeight() - scrollVPSize)/2);
+//                scrollPane.setWheelEnabled(true);
+//                scrollPane.setVisible(true);
+//                add(scrollPane, JLayeredPane.PALETTE_LAYER);
+//            }
         }
 
         // Log

@@ -14,8 +14,8 @@ public class Constants {
     public static class BORDERS {
         public static final double THICKNESS_2_mm = 2;
         public static final double THICKNESS_1_mm = 1;
-        public static final int THICKNESS_2 = Utils.mm2px(THICKNESS_2_mm);
-        public static final int THICKNESS_1 = Utils.mm2px(THICKNESS_1_mm);
+        public static final int THICKNESS_2 = DISP.mmToPxW(THICKNESS_2_mm);
+        public static final int THICKNESS_1 = DISP.mmToPxW(THICKNESS_1_mm);
 
         public static final LineBorder BLACK_BORDER = new LineBorder(
                 Color.BLACK, THICKNESS_1);
@@ -47,10 +47,21 @@ public class Constants {
     //-- Display properties
     public static class DISP {
 //        public final static int PPI = 109; // Apple Display
-        public final static int PPI = 89; // BenQ
+        public final static int PPI = 90; // BenQ
 //        public final static int PPI = 127; // MacBook Pro
+
+        private final static double hPPIScale = 1.01; // Height DPI is slightly larger
+
         public final static double INCH_MM = 25.4;
         public final static double LR_MARGIN_mm = 20; // (mm) Left-right margin
+
+        public static int mmToPxW(double mm) {
+            return (int) ((mm / INCH_MM) * PPI);
+        }
+
+        public static int mmToPxH(double mm) {
+            return (int) ((mm / INCH_MM) * PPI * hPPIScale);
+        }
     }
 
     public static class FONTS {
@@ -117,6 +128,14 @@ public class Constants {
         public final static String TASK = "TASK";
         public final static String TECHNIQUE = "TECHNIQUE";
         public static final String FLING = "FLING";
+
+        public static final String VELOCITY_GAIN = "velocity.gain";
+        public static final String VELOCITY_FRICTION = "velocity.friction";
+        public static final String MIN_FLING_VELOCITY = "min.fling.velocity";
+        public static final String ZOOM_GAIN = "zoom.gain";
+        public static final String PAN_GAIN = "pan.gain";
+        public static final String PAN_FRICTION = "pan.friction";
+        public static final String FLING_GAIN = "fling.gain";
 
         /**
          * Null-safe String comparison

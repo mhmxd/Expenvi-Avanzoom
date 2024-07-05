@@ -72,28 +72,21 @@ public class PanZoomView extends JPanel
 //    private FocusFrame thresholdSq;
     private BufferedImage image;
 
-    // Consts
-    private final int focusFrameSize = 50;
-    private final int SYMBOL_SIZE = 50;
-    private final int ZOOM_IN_MAX = 2000;
-    private final int ZOOM_OUT_MAX = 100;
-
     // Panning
     private boolean isCursorInside = false;
     private boolean isGrabbed = false;
     private Point dragPoint;
-    private final double PAN_FRICTION = 0.2;
+
 //    private final Point padPos = new Point(0,0); // Changed only with padding
 //    private Integer xDiff;
 //    private Integer yDiff;
     private final ScheduledExecutorService panner = Executors.newSingleThreadScheduledExecutor();
 
-    //– Zooming
+    //– Panning
 //    private final double GAIN = 0.05; // For Pan only
-    private final double GAIN = 0.01; // For Pan-Zoome
-    private final double PAN_GAIN = 1;
-    private final double FLING_GAIN = 0.2;
-    private int detent;
+    private final double PAN_GAIN;
+    private final double PAN_FRICTION;
+    private final double FLING_GAIN;
 
     //------------------------------------------------------------------
     private class PanTask implements Runnable {
@@ -125,7 +118,7 @@ public class PanZoomView extends JPanel
 
     //------------------------------------------------------------------
 
-    public PanZoomView(int vpSize, PanZoomTrial trial) {
+    public PanZoomView(PanZoomTrial trial) {
 //        planesDim = new MoDimension(vpSize); // Initial dim
         this.trial = trial;
 
@@ -145,6 +138,11 @@ public class PanZoomView extends JPanel
         addMouseWheelListener(this);
 //        moose.addMooseListener(this);
         Server.get().addPropertyChangeListener(this);
+
+        // Get config
+        PAN_GAIN = ExpFrame.config.getDouble(STRINGS.PAN_GAIN);
+        PAN_FRICTION = ExpFrame.config.getDouble(STRINGS.PAN_FRICTION);
+        FLING_GAIN = ExpFrame.config.getDouble(STRINGS.FLING_GAIN);
 
 
         // Set circle locations temporarily
@@ -752,11 +750,6 @@ public class PanZoomView extends JPanel
                         // Pan displace
                         if (STRINGS.equals(memo.getMode(), STRINGS.DISPLACE)) {
                             panDisplace((int) (memo.getV1Float()), (int) (memo.getV2Float()));
-                        }
-
-                        // Pan fling
-                        if (STRINGS.equals(memo.getMode(), STRINGS.FLING)) {
-                            panFling(memo.getV1Float() * GAIN, memo.getV2Float() * GAIN);
                         }
 
                         // Zoom

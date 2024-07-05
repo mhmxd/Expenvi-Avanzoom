@@ -8,6 +8,12 @@ import control.Server;
 import enums.Task;
 import enums.Technique;
 import moose.Moose;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 
@@ -16,6 +22,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.List;
 
 import static tool.Constants.*;
 
@@ -23,6 +30,10 @@ public class ExpFrame extends JFrame {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     public static String pID = "100";
+
+    private final String CONFIG_FILE_NAME = "config.properties";
+    private final Configurations configs = new Configurations();
+    public static PropertiesConfiguration config;
 
     // Zoom -----------------------------------------------
     public static final int NUM_ZOOM_BLOCKS = 10;
@@ -76,6 +87,30 @@ public class ExpFrame extends JFrame {
         });
 
         mapKeys();
+
+        loadConfig();
+    }
+
+    public void loadConfig() {
+        // Load config
+        try {
+            config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+                    .configure(new Parameters()
+                            .properties()
+                            .setFileName(CONFIG_FILE_NAME)
+                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
+                    .getConfiguration();
+
+//            Parameters params = new Parameters();
+//            FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+//                    new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+//                            .configure(params.properties()
+//                                    .setFileName("config.properties")
+//                                    .setListDelimiterHandler(new DefaultListDelimiterHandler(',')));
+//            config = builder.getConfiguration();
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

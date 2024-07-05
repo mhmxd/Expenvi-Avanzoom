@@ -37,7 +37,8 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.abs;
 import static tool.Constants.BORDERS;
-import static tool.Constants.COLORS;
+import static tool.Constants.*;
+import static ui.PanTaskPanel.focusAreaDim;
 
 public class PanViewPort extends JPanel implements MouseListener, MouseMotionListener, PropertyChangeListener {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
@@ -50,8 +51,10 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
     private int nScansCurveInsideFocus, nScans;
 
     private ScheduledExecutorService panner = Executors.newSingleThreadScheduledExecutor();
-    private final double PAN_FRICTION = 0.1;
-    private final double GAIN = 0.01;
+//    private final double PAN_FRICTION = 0.1; // Values must be consistent (see below)
+//    private final double PAN_GAIN = 0.01;
+    private final double PAN_FRICTION;
+    private final double PAN_GAIN;
 
     // View
     private final SVGIcon icon;
@@ -66,7 +69,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
     private static final int startPosX = 100;
     private static final int startPosY = 500;
 //    private static final int startBorderSize = 100;
-    private final int focusAreaSize;
+//    private final int focusAreaSize;
 
     private BufferedImage image;
     private final Stopwatch insideFocusStopwatch;
@@ -150,7 +153,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         endTrialAction = endTrAction;
 
         // Init
-        focusAreaSize = Utils.mm2px(PanTaskPanel.FOCUS_SIZE_mm);
+//        focusAreaSize = Utils.mm2px(PanTaskPanel.FOCUS_SIZE_mm);
         insideFocusStopwatch = Stopwatch.createUnstarted();
 
         // Add the focus area
@@ -166,6 +169,10 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
 //        moose.addMooseListener(this);
 
         Server.get().addPropertyChangeListener(this);
+
+        // Get config
+        PAN_GAIN = ExpFrame.config.getDouble(STRINGS.PAN_GAIN);
+        PAN_FRICTION = ExpFrame.config.getDouble(STRINGS.PAN_FRICTION);
     }
 
     @Override
@@ -360,7 +367,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         if (xDiff == null || yDiff == null) {
             int offsetX;
             int offsetY;
-            int offset = focusAreaSize / 2 + BORDERS.THICKNESS_2;
+            int offset = focusAreaDim.width / 2 + BORDERS.THICKNESS_2;
             if (rotate >= 0 && rotate < 90) {
                 offsetX = offset;
                 offsetY = -offset;
@@ -382,10 +389,10 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         }
 
         focusArea.setBounds(
-                getWidth() / 2 - focusAreaSize / 2,
-                getHeight() / 2 - focusAreaSize / 2,
-                focusAreaSize,
-                focusAreaSize);
+                getWidth() / 2 - focusAreaDim.width / 2,
+                getHeight() / 2 - focusAreaDim.height / 2,
+                focusAreaDim.width,
+                focusAreaDim.height);
         focusArea.setVisible(true);
 
         icon.paintIcon(this, g, xDiff, yDiff);
@@ -496,7 +503,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
                     case Constants.STRINGS.PAN -> {
                         if (Constants.STRINGS.equals(memo.getMode(), Constants.STRINGS.VEL)) {
                             if (hasFocus) {
-                                pan(memo.getV1Float() * GAIN, memo.getV2Float() * GAIN);
+                                pan(memo.getV1Float() * PAN_GAIN, memo.getV2Float() * PAN_GAIN);
                             }
                         }
 

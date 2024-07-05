@@ -9,6 +9,8 @@ import model.PanTrial;
 import moose.Moose;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
+import tool.Constants;
+import tool.MoDimension;
 import tool.Utils;
 
 import javax.swing.*;
@@ -18,7 +20,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static tool.Constants.BORDERS;
+import static tool.Constants.*;
 
 public class PanTaskPanel extends TaskPanel {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
@@ -26,14 +28,19 @@ public class PanTaskPanel extends TaskPanel {
     // Constants
 //    public static final int NUM_PAN_TRIALS_IN_BLOCK = 6; // Christian only used this, no blocking
     public static final double VP_SIZE_mm = 200;
-    public static final double FOCUS_SIZE_mm = 0.3 * VP_SIZE_mm;
-    public static final int ERROR_DURATION = 3 * 1000; // (ms) Duration to keep the error visible
+    public static final MoDimension viewportDim = new MoDimension(
+            Constants.DISP.mmToPxW(VP_SIZE_mm),
+            Constants.DISP.mmToPxH(VP_SIZE_mm));
+
+    public final static MoDimension focusAreaDim = viewportDim.scale(0.3);
+
+    public final int ERROR_DURATION = 3 * 1000; // (ms) Duration to keep the error visible
 
     // Experiment
     private final Task task;
     private final Moose moose;
     private final boolean startOnLeft;
-    private final int pvpSize; // Size of the viewport in px
+//    private final int pvpSize; // Size of the viewport in px
     private final int lrMargin; // Left-right margin in px (mm comes from ExpFrame)
 
     // Viewport
@@ -52,8 +59,8 @@ public class PanTaskPanel extends TaskPanel {
         setLayout(null);
 
         startOnLeft = new Random().nextBoolean(); // Randomly choose whether to start traials on the left or right
-        lrMargin = Utils.mm2px(ExpFrame.LR_MARGIN_MM);
-        pvpSize = Utils.mm2px(VP_SIZE_mm);
+        lrMargin = DISP.mmToPxW(ExpFrame.LR_MARGIN_MM);
+//        pvpSize = Utils.mm2px(VP_SIZE_mm);
 
         task = tsk;
         moose = ms;
@@ -145,7 +152,7 @@ public class PanTaskPanel extends TaskPanel {
         panViewPort = new PanViewPort(moose, (PanTrial) activeTrial, onFinishTrialAction);
         panViewPort.setBorder(BORDERS.BLACK_BORDER);
         Point position = findPositionForViewport(activeTrial.trialNum);
-        panViewPort.setBounds(position.x, position.y, pvpSize, pvpSize);
+        panViewPort.setBounds(position.x, position.y, viewportDim.width, viewportDim.height);
         panViewPort.setVisible(true);
         add(panViewPort, JLayeredPane.PALETTE_LAYER);
 
@@ -160,11 +167,11 @@ public class PanTaskPanel extends TaskPanel {
      */
     private Point findPositionForViewport(int trNum) {
         Point position = new Point();
-        position.y = (getHeight() - pvpSize) / 2; // Center
-        conLog.trace("PanelH = {}; TitleBarH = {}; ZVPSize = {}; Center = {}",
-                getHeight(), getInsets().top, pvpSize, position.y);
-        int randLeftX = new Random().nextInt(lrMargin, getWidth()/2 - pvpSize);
-        int randRightX = new Random().nextInt(getWidth()/2, getWidth() - lrMargin - pvpSize);
+        position.y = (getHeight() - viewportDim.height) / 2; // Center
+//        conLog.trace("PanelH = {}; TitleBarH = {}; ZVPSize = {}; Center = {}",
+//                getHeight(), getInsets().top, pvpSize, position.y);
+        int randLeftX = new Random().nextInt(lrMargin, getWidth()/2 - viewportDim.width);
+        int randRightX = new Random().nextInt(getWidth()/2, getWidth() - lrMargin - viewportDim.width);
         if (startOnLeft) {
             if (trNum % 2 == 1) position.x = randLeftX; // Trials 1, 3, ... are on left
             else position.x = randRightX; // Trials 2, 4, ... on right

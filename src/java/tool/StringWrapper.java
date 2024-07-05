@@ -86,13 +86,14 @@ public class StringWrapper {
         // Read and get the paragraphs
 //        String filePath = System.getProperty("user.dir") + "/res/" + resTxtFileName;
         String content = Files.readString(Path.of(txtFileURI));
-        String[] paragraphs = content.split("\n");
+        String[] paragraphs = content.split("\n\n");
 
         // Wrap each paragraph and write to file
         PrintWriter outFilePW = new PrintWriter(new FileWriter(outFileName));
         int nParagraphs = paragraphs.length;
         for (int pi = 0; pi < nParagraphs - 1; pi++) {
             outFilePW.println(wrapParagraph(paragraphs[pi], wrapWidth));
+            outFilePW.println();
         }
         outFilePW.print(wrapParagraph(paragraphs[nParagraphs - 1], wrapWidth)); // write the last paragraph
         outFilePW.close();

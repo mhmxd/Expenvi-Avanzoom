@@ -2,6 +2,7 @@ package ui;
 
 import control.Server;
 import moose.Memo;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.MinMax;
@@ -36,7 +37,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 //    private final int WRAP_CHARS_COUNT = 67;
 //    private final String WRAPPED_FILE_NAME = "./res/wrapped.txt";
 
-    private final Dimension dim; // in px
+//    private final Dimension dim; // in px
     private ArrayList<Integer> charCountInLines = new ArrayList<>();
     private int mNumLines;
 
@@ -58,7 +59,12 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     private boolean continueScrolling; // To continue scrolling
 
     private double velocity; // px/s
-    private final double VELOCITY_GAIN = 1.0;
+
+    // CONFIG: Value read from Config (ExFrame)
+//    private PropertiesConfiguration config = new PropertiesConfiguration();
+    private double cnfgVelocityGain;
+    private double cnfgVelocityFriction;
+    private double cnfgMinFlingVelocity;
 
     // For logging
 //    private GeneralInfo mGenInfo = new GeneralInfo();
@@ -74,18 +80,28 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     private final Color COLOR_LINE_HIGHLIGHT = COLORS.BLUE;
     private final Color COLOR_INDICATOR = COLORS.DARK_GREEN;
 
-    private final int WRAP_CHARS_COUNT = 67;
-    private final float TEXT_FONT_SIZE = 20.5f;
+    private final int WRAP_CHARS_COUNT = 70;
+    private final float TEXT_FONT_SIZE = 20f;
     private final float TEXT_LINE_SPACING = 0.193f;
-
 
     //-------------------------------------------------------------------------------------------------
 
-    public VTScrollPane(Dimension d) {
-        dim = d;
-        setPreferredSize(dim);
+    public VTScrollPane() {
+//        dim = d;
+
+//        setMaximumSize(dim);
+//        setMinimumSize(dim);
         setBorder(BorderFactory.createLineBorder(COLOR_VIEW_BORDER));
-        conLog.info("Dim = {}", dim);
+//        conLog.debug("Dim = {}", dim);
+
+        // Get configs
+//        VELOCITY_GAIN = ExpFrame.config.getDouble(STRINGS.VELOCITY_GAIN);
+//        VELOCITY_GAIN = (get).getConfig().getDouble(STRINGS.VELOCITY_GAIN);
+//        VELOCITY_FRICTION = ExpFrame.config.getDouble(STRINGS.VELOCITY_FRICTION);
+//        MIN_FLING_VELOCITY = ExpFrame.config.getDouble(STRINGS.MIN_FLING_VELOCITY);
+//
+//        conLog.debug("Config: {}, {}, {}", config.getDouble(STRINGS.VELOCITY_GAIN),
+//                VELOCITY_FRICTION, MIN_FLING_VELOCITY);
     }
 
     /**
@@ -93,12 +109,13 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      * @param fileName Name of the file (WITHOUT suffix)
      * @return Instance
      */
-    public VTScrollPane setText(String fileName) {
+    public VTScrollPane setText(String fileName, int textWidth, boolean reWrap) {
         final String resFilePath = fileName + ".txt";
         final String wrappedFile = fileName + "-wrapped.txt";
 
         try {
-            if (!(new File(wrappedFile).isFile())) {
+            if (reWrap) {
+                final File wFile = new File(wrappedFile);
                 charCountInLines = StringWrapper.wrapFile(
                         Resources.TEXT.URI_LOREM,
                         wrappedFile,
@@ -111,7 +128,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             mNumLines = charCountInLines.size();
 
             // Body of text
-            bodyTextPane = new CustomTextPane(false);
+            bodyTextPane = new CustomTextPane(false, textWidth);
             bodyTextPane.read(new FileReader(wrappedFile), "wrapped");
             bodyTextPane.setEditable(false);
             final Font bodyFont = FONTS.SF_LIGHT.deriveFont(TEXT_FONT_SIZE);
@@ -131,7 +148,17 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             e.printStackTrace();
         }
 
+
+
         return this;
+    }
+
+    public void setConfig(double velGain, double velFriction, double minFlingVel) {
+        cnfgVelocityGain = velGain;
+        cnfgVelocityFriction = velFriction;
+        cnfgMinFlingVelocity = minFlingVel;
+
+        conLog.info("New config set!");
     }
 
     /**
@@ -139,36 +166,36 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      * @param lineNumsPaneW Width of the line num pane (mm)
      * @return Current instance
      */
-    public VTScrollPane setLineNums(double lineNumsPaneW) {
-
-        // Set dimention
-        Dimension lnpDim = new Dimension(Utils.mm2px(lineNumsPaneW), dim.height);
-
-        // Set up Line numbers
-        linesTextPane = new JTextPane();
-        linesTextPane.setPreferredSize(lnpDim);
-        linesTextPane.setBackground(COLOR_LINE_NUM_BACK);
-        linesTextPane.setEditable(false);
-        final Font linesFont = FONTS.SF_LIGHT
-                .deriveFont(TEXT_FONT_SIZE)
-                .deriveFont(FONTS.ATTRIB_ITALIC);
-        linesTextPane.setFont(linesFont);
-        linesTextPane.setForeground(Color.GRAY);
-        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-        StyleConstants.setAlignment(attributeSet, StyleConstants.ALIGN_CENTER);
-        StyleConstants.setLineSpacing(attributeSet,TEXT_LINE_SPACING);
-        final int len = bodyTextPane.getStyledDocument().getLength();
-        linesTextPane.
-                getStyledDocument().
-                setParagraphAttributes(0, len, attributeSet, false);
-
-        linesTextPane.setText(getLineNumbers(charCountInLines.size()));
-
-        // Show the line nums
-        setRowHeaderView(linesTextPane);
-
-        return this;
-    }
+//    public VTScrollPane setLineNums(double lineNumsPaneW) {
+//
+//        // Set dimention
+////        Dimension lnpDim = new Dimension(Utils.mm2px(lineNumsPaneW), dim.height);
+//
+//        // Set up Line numbers
+//        linesTextPane = new JTextPane();
+//        linesTextPane.setPreferredSize(lnpDim);
+//        linesTextPane.setBackground(COLOR_LINE_NUM_BACK);
+//        linesTextPane.setEditable(false);
+//        final Font linesFont = FONTS.SF_LIGHT
+//                .deriveFont(TEXT_FONT_SIZE)
+//                .deriveFont(FONTS.ATTRIB_ITALIC);
+//        linesTextPane.setFont(linesFont);
+//        linesTextPane.setForeground(Color.GRAY);
+//        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+//        StyleConstants.setAlignment(attributeSet, StyleConstants.ALIGN_CENTER);
+//        StyleConstants.setLineSpacing(attributeSet,TEXT_LINE_SPACING);
+//        final int len = bodyTextPane.getStyledDocument().getLength();
+//        linesTextPane.
+//                getStyledDocument().
+//                setParagraphAttributes(0, len, attributeSet, false);
+//
+//        linesTextPane.setText(getLineNumbers(charCountInLines.size()));
+//
+//        // Show the line nums
+//        setRowHeaderView(linesTextPane);
+//
+//        return this;
+//    }
 
     /**
      * Set the scroll bar
@@ -178,7 +205,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      */
     public VTScrollPane setScrollBar(double scrollBarW, double thumbH) {
         // Set dimentions
-        Dimension scBarDim = new Dimension(Utils.mm2px(scrollBarW), dim.height);
+        Dimension scBarDim = new Dimension(DISP.mmToPxW(scrollBarW), getHeight());
 //        Dimension scThumbDim = new Dimension(scBarDim.width, Utils.mm2px(thumbH));
 
         // Verticall scroll bar
@@ -212,6 +239,10 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         setWheelScrollingEnabled(false); // Don't scroll by default
 
         Server.get().addPropertyChangeListener(this);
+
+//        this.config = config;
+
+//        conLog.info("Config: {}", config.getDouble(STRINGS.VELOCITY_GAIN));
 
         return this;
     }
@@ -302,14 +333,16 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 
     private void fling(double v) {
         conLog.info("Fling with v = {}", v);
-        velocity += v;
+        velocity += v; // Cumulative velocity
         conLog.info("Veloctity = {}", velocity);
         new Thread(() -> {
             conLog.info("Thread!! {}, {}", continueScrolling, Math.abs(velocity) );
-            while (continueScrolling && Math.abs(velocity) > 10) {
+            while (continueScrolling && Math.abs(velocity) > cnfgMinFlingVelocity) {
                 final int dY = (int) (velocity * 0.1); // 0.1s => 0.1Vel px
                 scroll(dY);
-                velocity *= 0.9; // Friction
+
+                velocity *= cnfgVelocityFriction; // Friction
+
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
@@ -380,7 +413,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      * @return Number of visible lines
      */
     public int getNVisibleLines() {
-        return dim.height / getLineHeight();
+        return getHeight() / getLineHeight();
+//        return dim.height / getLineHeight();
     }
 
     /**
@@ -507,7 +541,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 
             if (memo.isAction(STRINGS.FLING)) {
                 continueScrolling = true;
-                fling(memo.getV2Float() * VELOCITY_GAIN);
+                fling(memo.getV2Float() * cnfgVelocityGain);
             }
         }
     }

@@ -2,15 +2,19 @@ package ui;
 
 import javax.swing.*;
 import javax.swing.text.*;
+import java.awt.*;
 
 public class CustomTextPane extends JTextPane {
     private final boolean lineWrap;
+    private final int width;
 
-    public CustomTextPane(final boolean lineWrap) {
+    public CustomTextPane(final boolean lineWrap, int w) {
         this.lineWrap = lineWrap;
 
         if (lineWrap)
             setEditorKit(new WrapEditorKit());
+
+        width = w;
     }
 
     @Override
@@ -20,6 +24,13 @@ public class CustomTextPane extends JTextPane {
         else
             return getParent() == null
                     || getUI().getPreferredSize(this).width <= getParent().getSize().width;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        Dimension size = super.getPreferredSize();
+        size.width = width; // Set the desired width
+        return size;
     }
 
     private class WrapEditorKit extends StyledEditorKit {

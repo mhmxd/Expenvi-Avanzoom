@@ -39,6 +39,13 @@ public class MoDimension extends Dimension {
         this.height = (int) (base.height * d);
     }
 
+    public MoDimension scale(double ratio) {
+        width *= ratio;
+        height *= ratio;
+
+        return this;
+    }
+
     public void scalePerc(double prcnt) {
         this.width += (int) (prcnt * this.width);
         this.height += (int) (prcnt * this.height);

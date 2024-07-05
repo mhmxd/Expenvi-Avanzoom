@@ -1,6 +1,7 @@
 package model;
 
 import com.google.gson.Gson;
+import enums.Direction;
 import enums.Task;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
@@ -107,7 +108,8 @@ public class Block {
             }
 
             case SCROLL -> {
-
+                trials.add(new ScrollTrial(Direction.N, 300, 5));
+                trials.add(new ScrollTrial(Direction.S, 50, 3));
             }
         }
 
