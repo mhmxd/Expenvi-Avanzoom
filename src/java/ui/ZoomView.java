@@ -5,7 +5,7 @@ import com.kitfox.svg.animation.AnimationElement;
 import com.kitfox.svg.app.beans.SVGIcon;
 import com.kitfox.svg.app.beans.SVGPanel;
 import control.Server;
-import enums.Task;
+import enums.TaskType;
 import listener.MooseListener;
 import moose.Memo;
 import moose.Moose;
@@ -34,7 +34,7 @@ public class ZoomView extends JPanel
 
     private String VK_SPACE = String.valueOf(KeyEvent.VK_SPACE);
 
-    private Task task;
+    private TaskType taskType;
 
     // View
     private final SVGIcon zoomSVGIcon;
@@ -86,7 +86,7 @@ public class ZoomView extends JPanel
 //        int dX, dY;
 //
 //        public PanTask(double vX, double vY) {
-//            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the Task)
+//            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the TaskType)
 //            velY = (int) vY; // px/s -> px/(10)ms
 //        }
 //
@@ -110,8 +110,8 @@ public class ZoomView extends JPanel
 
     //------------------------------------------------------------------
 
-    public ZoomView(Task task) {
-        this.task = task;
+    public ZoomView(TaskType taskType) {
+        this.taskType = taskType;
 
         zoomSVGIcon = new SVGIcon();
         zoomSVGIcon.setAntiAlias(true);
@@ -142,18 +142,20 @@ public class ZoomView extends JPanel
         Server.get().addPropertyChangeListener(this);
 
         // Get configs
-        ZOOM_GAIN = ExpFrame.config.getInt(STRINGS.ZOOM_GAIN);
+//        ZOOM_GAIN = ExpFrame.config.getInt(STRINGS.ZOOM_GAIN);
 
     }
+
+
 
     @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
 
         URI zURI = null;
-        if (task == Task.ZOOM_IN) {
+        if (taskType == TaskType.ZOOM_IN) {
             zURI = Resources.SVG.ZOOM_IN_URI;
-        } else if (task == Task.ZOOM_OUT) {
+        } else if (taskType == TaskType.ZOOM_OUT) {
             zURI = Resources.SVG.ZOOM_OUT_URI;
         }
 

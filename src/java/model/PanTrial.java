@@ -1,7 +1,5 @@
 package model;
 
-import enums.Task;
-
 import java.net.URI;
 
 import static tool.Resources.SVG;
@@ -13,8 +11,8 @@ public class PanTrial extends Trial {
 
     public PanTrial(int level, Integer rotation) {
         super();
-        this.level = level;
 
+        this.level = level;
         switch (level) {
             case 1 -> uri = SVG.PAN_LVL1_URI;
             case 2 -> uri = SVG.PAN_LVL2_URI;

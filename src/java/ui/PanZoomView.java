@@ -1,6 +1,5 @@
 package ui;
 
-import com.kitfox.svg.*;
 import control.Server;
 import listener.MooseListener;
 import model.MoPlane;
@@ -18,8 +17,6 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -82,11 +79,12 @@ public class PanZoomView extends JPanel
 //    private Integer yDiff;
     private final ScheduledExecutorService panner = Executors.newSingleThreadScheduledExecutor();
 
-    //– Panning
-//    private final double GAIN = 0.05; // For Pan only
-    private final double PAN_GAIN;
-    private final double PAN_FRICTION;
-    private final double FLING_GAIN;
+    // Config
+    private double cnfgZoomWheelNotchGain;
+    private double cnfgPanGain;
+    private double cnfgPanFriction;
+    private double cnfgFlingGain;
+
 
     //------------------------------------------------------------------
     private class PanTask implements Runnable {
@@ -94,7 +92,7 @@ public class PanZoomView extends JPanel
         int dX, dY;
 
         public PanTask(double vX, double vY) {
-            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the Task)
+            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the TaskType)
             velY = (int) vY; // px/s -> px/(10)ms
         }
 
@@ -104,8 +102,8 @@ public class PanZoomView extends JPanel
             while (Math.abs(velX) > 0 || Math.abs(velY) > 0) {
                 conLog.info("Run: vX, vY = {}, {}", velX, velY);
                 panDisplace(velX, velY);
-                velX *= (1 - PAN_FRICTION);
-                velY *= (1 - PAN_FRICTION);
+                velX *= (1 - cnfgPanFriction);
+                velY *= (1 - cnfgPanFriction);
 
                 try {
                     Thread.sleep(5);
@@ -139,11 +137,6 @@ public class PanZoomView extends JPanel
 //        moose.addMooseListener(this);
         Server.get().addPropertyChangeListener(this);
 
-        // Get config
-        PAN_GAIN = ExpFrame.config.getDouble(STRINGS.PAN_GAIN);
-        PAN_FRICTION = ExpFrame.config.getDouble(STRINGS.PAN_FRICTION);
-        FLING_GAIN = ExpFrame.config.getDouble(STRINGS.FLING_GAIN);
-
 
         // Set circle locations temporarily
 //        roomCircleLocations.put(7, new ArrayList<>());
@@ -152,6 +145,14 @@ public class PanZoomView extends JPanel
 //        roomCircleLocations.get(7).add(new Point(12800, 7000));
 //        roomCircleLocations.get(7).add(new Point(13500, 6000));
 
+    }
+
+    public void setConfig(double zoomWheelNotchGain, double panGain, double panFriction) {
+        cnfgZoomWheelNotchGain = zoomWheelNotchGain;
+        cnfgPanGain = panGain;
+        cnfgPanFriction = panFriction;
+
+        conLog.info("New config set!");
     }
 
 //    public void setDim(int size) {
@@ -374,7 +375,7 @@ public class PanZoomView extends JPanel
         conLog.info("Pan dX, dY = {}, {}", dX, dY);
 //        plainPlane.translate((int) (dX * PAN_GAIN), (int) (dY * PAN_GAIN));
 //        trialPlane.translate((int) (dX * PAN_GAIN), (int) (dY * PAN_GAIN));
-        planePos.translate((int) (dX * PAN_GAIN), (int) (dY * PAN_GAIN));
+        planePos.translate((int) (dX * cnfgPanGain), (int) (dY * cnfgPanGain));
 //        maxZoomSq.translate((int) (dX * PAN_GAIN), (int) (dY * PAN_GAIN));
 //        minZoomSq.translate((int) (dX * PAN_GAIN), (int) (dY * PAN_GAIN));
         repaint();
@@ -691,7 +692,7 @@ public class PanZoomView extends JPanel
 //        detent -= dZ; // Zoom-in -> must be +
         conLog.trace("Rotation = {}, Prec. Rot = {}",
                 e.getWheelRotation(), e.getPreciseWheelRotation());
-        final double dZ = e.getPreciseWheelRotation() * ExpFrame.NOTCH_GAIN_Z;
+        final double dZ = e.getPreciseWheelRotation() * cnfgZoomWheelNotchGain;
         zoom(dZ);
 //        svgSize = findSVGSize(-rot);
 //        repaint();
@@ -760,7 +761,7 @@ public class PanZoomView extends JPanel
 
                     case STRINGS.FLING -> {
                         conLog.info("Flinging...");
-                        panFling(memo.getV1Float() * FLING_GAIN, memo.getV2Float() * FLING_GAIN);
+                        panFling(memo.getV1Float() * cnfgFlingGain, memo.getV2Float() * cnfgFlingGain);
                     }
 
                     case STRINGS.ZOOM -> {

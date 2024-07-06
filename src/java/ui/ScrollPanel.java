@@ -1,7 +1,8 @@
 package ui;
 
-import enums.Task;
-import model.Block;
+import enums.Direction;
+import enums.TaskType;
+import model.ScrollBlock;
 import model.ScrollTrial;
 import moose.Moose;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -13,9 +14,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-
-import static ui.ExpFrame.NUM_ZOOM_BLOCKS;
-import static ui.ExpFrame.NUM_ZOOM_REPS;
+import java.util.ArrayList;
+import java.util.List;
 
 import static tool.Constants.*;
 
@@ -40,11 +40,11 @@ public class ScrollPanel extends TaskPanel{
     private String configStr;
 
     // Experiment
-    private final Task task;
+    private final TaskType taskType;
 //    private ScrollTrial trial;
     private final Moose moose;
 
-    public ScrollPanel(Dimension dim, Moose ms, Task tsk) {
+    public ScrollPanel(Dimension dim, Moose ms, TaskType tsk) {
         super(dim);
 
         setSize(dim);
@@ -60,7 +60,7 @@ public class ScrollPanel extends TaskPanel{
             }
         });
 
-        task = tsk;
+        taskType = tsk;
         moose = ms;
 
         configButton.addActionListener(new AbstractAction() {
@@ -79,16 +79,28 @@ public class ScrollPanel extends TaskPanel{
         try {
             super.loadConfig();
 
-            final double velGain = config.getDouble(STRINGS.VELOCITY_GAIN);
-            final double velFriction = config.getDouble(STRINGS.VELOCITY_FRICTION);
-            final double minFlingVal = config.getDouble(STRINGS.MIN_FLING_VELOCITY);
+            List<String> keyValues = new ArrayList<>();
+
+            final String flingVelGainKey = String.join(".",
+                    STRINGS.FLING, STRINGS.VELOCITY, STRINGS.GAIN);
+            final double flingVelGain = config.getDouble(flingVelGainKey);
+            keyValues.add(flingVelGainKey + " = " + String.format("%.2f", flingVelGain));
+
+            final String flingVelFrictionKey = String.join(".",
+                    STRINGS.FLING, STRINGS.VELOCITY, STRINGS.FRICTION);
+            final double flingVelFriction = config.getDouble(flingVelFrictionKey);
+            keyValues.add(flingVelFrictionKey + " = " + String.format("%.2f", flingVelFriction));
+
+            final String flingMinVelocityKey = String.join(".",
+                    STRINGS.FLING, STRINGS.MIN, STRINGS.VELOCITY);
+            final double flingMinVelocity = config.getDouble(flingMinVelocityKey);
+            keyValues.add(flingMinVelocityKey + " = " + String.format("%.2f", flingMinVelocity));
 
             // Set in the scrollPane
-            scrollPane.setConfig(velGain, velFriction, minFlingVal);
+            scrollPane.setConfig(flingVelGain, flingVelFriction, flingMinVelocity);
 
-            // Show config
-            configLabel.setText(String.format("V Gain = %.2f | V Friction = %.2f | Min Fling V = %.2f",
-                    velGain, velFriction, minFlingVal));
+            // Show config in the label
+            configLabel.setText(String.join(" | ", keyValues));
 
         } catch (ConfigurationException e) {
             throw new RuntimeException(e);
@@ -109,9 +121,19 @@ public class ScrollPanel extends TaskPanel{
     protected void createBlocks() {
         super.createBlocks();
 
-        for (int i = 0; i < NUM_ZOOM_BLOCKS; i++) {
-            blocks.add(new Block(i + 1, task, NUM_ZOOM_REPS));
+        // Extract the design factor values
+        final String prefix = "scroll.";
+        final int numBlocks = expDesign.getInt(prefix + STRINGS.NUM_BLOCKS);
+        final List<Direction> directions = expDesign.getList(Direction.class, prefix + STRINGS.DIRECTIONS);
+        final List<Integer> distances = expDesign.getList(Integer.class, prefix + STRINGS.DISTANCES);
+        final List<Integer> indicSizes = expDesign.getList(Integer.class, prefix + STRINGS.INDICATOR_SIZES);
+
+        // Create blocks
+        for (int b = 1; b <= numBlocks; b++) {
+            blocks.add(new ScrollBlock(b, directions, distances, indicSizes));
         }
+
+        conLog.info("Blocks: {}", blocks);
     }
 
     /**

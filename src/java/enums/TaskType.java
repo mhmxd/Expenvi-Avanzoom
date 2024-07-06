@@ -1,7 +1,7 @@
 package enums;
 
 @SuppressWarnings("unused")
-public enum Task {
+public enum TaskType {
     ZOOM_OUT(1, "Zoom-Out"),
     ZOOM_IN(2, "Zoom-In"),
     PAN(3, "Pan"),
@@ -11,7 +11,7 @@ public enum Task {
     private final int id;
     private final String text;
 
-    Task(int id, String text) {
+    TaskType(int id, String text) {
         this.id = id;
         this.text = text;
     }

@@ -1,16 +1,11 @@
 package model;
 
 import com.google.gson.Gson;
-import enums.Direction;
-import enums.Task;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.Utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
-
-import static ui.ExpFrame.*;
 
 public class Block {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
@@ -18,113 +13,17 @@ public class Block {
     public int blockNum;
     public final ArrayList<Trial> trials = new ArrayList<>();
 
-    /**
-     * Constructor
-     * @param blkNum Block number
-     * @param task Which task? (ZOOM-IN, ZOOM-OUT, PAN)
-     * @param repetition Number of repetitions (in each block)
-     */
-    public Block(int blkNum, Task task, int repetition) {
-        blockNum = blkNum;
-
-        switch (task) {
-            case ZOOM_IN -> {
-//                int START_LEVEL = 1; // Outer ring
-                for (int j = 0; j < repetition; j++) {
-                    for (int dist : TARGET_DISTS) {
-                        conLog.debug("Dist = {}", dist);
-                        // Choose the target randomly (from 1 to total n levels - dist - tol)
-                        final int noelMult = Utils.randMulInt(
-                                dist + TARGET_TOLERANCE,
-                                MAX_NOTCHES - TARGET_TOLERANCE,
-                                NOTCHES_IN_ELEMENT);
-                        final int targetLevel = noelMult + NOTCHES_IN_ELEMENT / 2; // Always center of the next circle
-
-                        trials.add(new ZoomTrial(Task.ZOOM_IN, targetLevel - dist,
-                                targetLevel));
-                        conLog.debug("ZI: Noel = {} -> Target = {} -> Start = {}",
-                                noelMult, targetLevel, targetLevel - dist);
-                    }
-
-                    Collections.shuffle(trials);
-
-                    for (int t = 0; t < trials.size(); t++) {
-                        trials.get(t).blockNum = blkNum;
-                        trials.get(t).trialNum = t + 1;
-                        trials.get(t).id = trials.get(t).blockNum * 100 + trials.get(t).trialNum;
-                    }
-                }
-            }
-
-            case ZOOM_OUT -> {
-
-//                int START_LEVEL = PanZoomPanel.ZOOM_N_ELEMENTS / 2 + 1; // Central circle
-                for (int dist : TARGET_DISTS) {
-                    for (int j = 0; j < repetition; j++) {
-                        conLog.debug("Dist = {}", dist);
-                        // Choose the target randomly (from 1 to total n levels - dist - tol)
-                        final int noelMult = Utils.randMulInt(
-                                TARGET_TOLERANCE,
-                                MAX_NOTCHES - TARGET_TOLERANCE - dist,
-                                NOTCHES_IN_ELEMENT);
-                        final int targetLevel = noelMult + NOTCHES_IN_ELEMENT / 2; // Always center of the next circle
-
-                        trials.add(new ZoomTrial(Task.ZOOM_OUT, targetLevel + dist,
-                                targetLevel));
-                        conLog.debug("ZO: Noel = {} -> Target = {} -> Start = {}",
-                                noelMult, targetLevel, targetLevel + dist);
-                    }
-                }
-
-                Collections.shuffle(trials);
-
-                for (int t = 0; t < trials.size(); t++) {
-                    trials.get(t).blockNum = blkNum;
-                    trials.get(t).trialNum = t + 1;
-                    trials.get(t).id = trials.get(t).blockNum * 100 + trials.get(t).trialNum;
-                }
-
-            }
-
-            case PAN -> {
-                // For each repetition: randomly choose the rotation for the short curve. Next two will be +120 and +240
-                for (int i = 0; i < NUM_PAN_REPS; i++) {
-                    int rotation = Utils.randInt(0, 360);
-                    trials.add(new PanTrial(1, rotation));
-                    trials.add(new PanTrial(2, (rotation + 120) % 360)); // Go over the next rotation
-                    trials.add(new PanTrial(3, (rotation + 240) % 360)); // Go over the next rotation
-                }
-
-                // Shuffle the trials
-                Collections.shuffle(trials);
-            }
-
-            case PAN_ZOOM -> {
-                 for (int i = 0; i < 8; i++) { // 8 Rooms in the plan
-                     trials.add(new PanZoomTrial(i, Utils.randInt(250, 340)));
-                 }
-
-                 Collections.shuffle(trials);
-            }
-
-            case SCROLL -> {
-                trials.add(new ScrollTrial(Direction.N, 300, 5));
-                trials.add(new ScrollTrial(Direction.S, 50, 3));
-            }
-        }
-
-        // Set the numbers and IDs
+    public void setNumsIds(int blkNum) {
         for (int t = 0; t < trials.size(); t++) {
             trials.get(t).blockNum = blkNum;
             trials.get(t).trialNum = t + 1;
             trials.get(t).id = trials.get(t).blockNum * 100 + trials.get(t).trialNum;
         }
-
     }
 
     /**
      * Create the Pan trials in this block
-     * (uses constants from PanTaskPanel)
+     * (uses constants from PanPanel)
      */
     public void createPanTrials() {
 //        List<Trial> tempList = new ArrayList<>();
@@ -141,29 +40,29 @@ public class Block {
 
 
 
-//        int radius = 360 / PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK;
-//        for (int i = 0; i < PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK; i++) {
+//        int radius = 360 / PanPanel.NUM_PAN_TRIALS_IN_BLOCK;
+//        for (int i = 0; i < PanPanel.NUM_PAN_TRIALS_IN_BLOCK; i++) {
 //            int rotation = radius * i + rand.nextInt(radius);
 //            temp1.add(new PanTrial(1, rotation));
 //        }
 //        Collections.shuffle(temp1);
 //
-//        radius = 360 / PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK;
-//        for (int i = 0; i < PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK; i++) {
+//        radius = 360 / PanPanel.NUM_PAN_TRIALS_IN_BLOCK;
+//        for (int i = 0; i < PanPanel.NUM_PAN_TRIALS_IN_BLOCK; i++) {
 //            int rotation = radius * i + rand.nextInt(radius);
 //            temp2.add(new PanTrial(2, rotation));
 //        }
 //        Collections.shuffle(temp2);
 //
-//        radius = 360 / PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK;
-//        for (int i = 0; i < PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK; i++) {
+//        radius = 360 / PanPanel.NUM_PAN_TRIALS_IN_BLOCK;
+//        for (int i = 0; i < PanPanel.NUM_PAN_TRIALS_IN_BLOCK; i++) {
 //            int rotation = radius * i + rand.nextInt(radius);
 //            temp3.add(new PanTrial(3, rotation));
 //        }
 //        Collections.shuffle(temp3);
 //
 //        List<Trial> temp = new ArrayList<>();
-//        int sum = PanTaskPanel.NUM_PAN_TRIALS_IN_BLOCK / 3;
+//        int sum = PanPanel.NUM_PAN_TRIALS_IN_BLOCK / 3;
 //        for (int i = 0; i < 3; i++) {
 //            temp.clear();
 //            for (int j = 0; j < sum; j++) {
@@ -229,5 +128,13 @@ public class Block {
         final Class<? extends Trial> trialType = inTr.getClass();
 
         return gson.fromJson(trialJSON, trialType);
+    }
+
+    @Override
+    public String toString() {
+        return "Block{" +
+                "blockNum=" + blockNum +
+                ", trials=" + trials +
+                '}';
     }
 }

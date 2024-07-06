@@ -129,13 +129,28 @@ public class Constants {
         public final static String TECHNIQUE = "TECHNIQUE";
         public static final String FLING = "FLING";
 
-        public static final String VELOCITY_GAIN = "velocity.gain";
-        public static final String VELOCITY_FRICTION = "velocity.friction";
-        public static final String MIN_FLING_VELOCITY = "min.fling.velocity";
-        public static final String ZOOM_GAIN = "zoom.gain";
-        public static final String PAN_GAIN = "pan.gain";
-        public static final String PAN_FRICTION = "pan.friction";
-        public static final String FLING_GAIN = "fling.gain";
+        public static final String WHEEL_NOTCH = "wheel.notch";
+
+        public static final String GAIN = "gain";
+        public static final String FRICTION = "friction";
+
+        public static final String VELOCITY = "velocity";
+        public static final String MIN = "min";
+
+        public static final String NUM_BLOCKS = "num.blocks";
+        public static final String DISTANCES = "distances";
+        public static final String DIRECTIONS = "directions";
+        public static final String INDICATOR_SIZES = "indicator.sizes";
+
+//        public static String chain(String... args) {
+//            StringBuilder sb = new StringBuilder();
+//            for (int i = 0; i < args.length - 1; i++) {
+//                sb.append(args[i]).append(".");
+//            }
+//            sb.append(args[args.length - 1]);
+//
+//            return sb.toString();
+//        }
 
         /**
          * Null-safe String comparison

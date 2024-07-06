@@ -2,7 +2,7 @@ package model;
 
 abstract public class Trial {
     public int id;
-//    public final Task task;
+//    public final TaskType task;
     public int blockNum;
     public int trialNum;
 //    public final int level;
@@ -10,7 +10,6 @@ abstract public class Trial {
     public int retries;
 
     public Trial() {
-//        this.level = level;
         this.finished = false;
         this.retries = 0;
     }

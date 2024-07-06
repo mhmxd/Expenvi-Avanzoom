@@ -5,7 +5,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import control.Server;
-import enums.Task;
+import enums.TaskType;
 import enums.Technique;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
@@ -33,8 +33,8 @@ public class InfoPanel extends JPanel {
         JLabel pIdLabel = new JLabel("PId:", SwingConstants.RIGHT);
         JTextField pIdTextField = new JTextField(pId);
 
-        JLabel taskLabel = new JLabel("Task:", SwingConstants.RIGHT);
-        JComboBox<Task> taskComboBox = new JComboBox<>(Task.values());
+        JLabel taskLabel = new JLabel("TaskType:", SwingConstants.RIGHT);
+        JComboBox<TaskType> taskComboBox = new JComboBox<>(TaskType.values());
 
         JLabel techniqueLabel = new JLabel("Technique:", SwingConstants.RIGHT);
         JComboBox<Technique> techniqueComboBox = new JComboBox<>(Technique.values());

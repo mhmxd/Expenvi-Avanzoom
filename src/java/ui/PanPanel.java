@@ -1,28 +1,27 @@
 package ui;
 
 import control.Logex;
-import enums.Task;
+import enums.TaskType;
 import enums.TrialEvent;
 import enums.TrialStatus;
-import model.Block;
 import model.PanTrial;
 import moose.Moose;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.Constants;
 import tool.MoDimension;
-import tool.Utils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.Random;
+import java.util.*;
+import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import static tool.Constants.*;
 
-public class PanTaskPanel extends TaskPanel {
+public class PanPanel extends TaskPanel {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     // Constants
@@ -37,7 +36,7 @@ public class PanTaskPanel extends TaskPanel {
     public final int ERROR_DURATION = 3 * 1000; // (ms) Duration to keep the error visible
 
     // Experiment
-    private final Task task;
+    private final TaskType taskType;
     private final Moose moose;
     private final boolean startOnLeft;
 //    private final int pvpSize; // Size of the viewport in px
@@ -50,9 +49,9 @@ public class PanTaskPanel extends TaskPanel {
      * Constructor
      * @param dim Dimension – Desired dimension of the panel
      * @param ms Moose – Reference to the Moose
-     * @param tsk Task – Type of the task
+     * @param tsk TaskType – Type of the taskType
      */
-    public PanTaskPanel(Dimension dim, Moose ms, Task tsk) {
+    public PanPanel(Dimension dim, Moose ms, TaskType tsk) {
         super(dim);
 
         setSize(dim);
@@ -62,7 +61,7 @@ public class PanTaskPanel extends TaskPanel {
         lrMargin = DISP.mmToPxW(ExpFrame.LR_MARGIN_MM);
 //        pvpSize = Utils.mm2px(VP_SIZE_mm);
 
-        task = tsk;
+        taskType = tsk;
         moose = ms;
 
         createBlocks();
@@ -73,8 +72,40 @@ public class PanTaskPanel extends TaskPanel {
     protected void createBlocks() {
         super.createBlocks();
 
-        for (int i = 0; i < ExpFrame.NUM_PAN_BLOCKS; i++) {
-            blocks.add(new Block(i + 1, task, 1));
+//        for (int i = 0; i < ExpFrame.NUM_PAN_BLOCKS; i++) {
+//            blocks.add(new Block(i + 1, taskType, 1));
+//        }
+    }
+
+    @Override
+    protected void loadConfig() {
+        try {
+            super.loadConfig();
+
+            // TODO Fill
+
+//            List<String> keyValues = new ArrayList<>();
+//
+//            final String zoomNotchGainKey = String.join(".", STRINGS.WHEEL_NOTCH, STRINGS.GAIN);
+//            final double zoomWheelNotchGain = config.getDouble(zoomNotchGainKey);
+//            keyValues.add(zoomNotchGainKey + " = " + String.format("%.2f", zoomWheelNotchGain));
+//
+//            final String panGainKey = String.join(".",STRINGS.PAN, STRINGS.GAIN);
+//            final double panGain = config.getDouble(panGainKey);
+//            keyValues.add(panGainKey + " = " + String.format("%.2f", panGain));
+//
+//            final String panFrictionKey = String.join(".",STRINGS.PAN, STRINGS.FRICTION);
+//            final double panFriction = config.getDouble(panFrictionKey);
+//            keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
+//
+//            // Set in the scrollPane
+//            panViewPort.setConfig(zoomWheelNotchGain, panGain, panFriction);
+//
+//            // Show config in the label
+//            configLabel.setText(String.join(" | ", keyValues));
+
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
         }
     }
 

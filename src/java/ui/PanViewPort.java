@@ -18,7 +18,6 @@ import moose.Moose;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.Constants;
-import tool.Utils;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.abs;
 import static tool.Constants.BORDERS;
 import static tool.Constants.*;
-import static ui.PanTaskPanel.focusAreaDim;
+import static ui.PanPanel.focusAreaDim;
 
 public class PanViewPort extends JPanel implements MouseListener, MouseMotionListener, PropertyChangeListener {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
@@ -53,9 +52,10 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
     private ScheduledExecutorService panner = Executors.newSingleThreadScheduledExecutor();
 //    private final double PAN_FRICTION = 0.1; // Values must be consistent (see below)
 //    private final double PAN_GAIN = 0.01;
-    private final double PAN_FRICTION;
-    private final double PAN_GAIN;
 
+    // Config
+    private double cnfgPanFriction;
+    private double cnfgPanGain;
     // View
     private final SVGIcon icon;
     private int rotate;
@@ -108,7 +108,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         int velX, velY;
 
         public PanTask(double vX, double vY) {
-            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the Task)
+            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the TaskType)
             velY = (int) vY; // px/s -> px/(10)ms
         }
 
@@ -120,12 +120,12 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
 
                 if (abs(velX) > 0){
                     int xDir = velX / abs(velX);
-                    velX = (int) (abs(velX) - PAN_FRICTION * abs(velX)) * xDir;
+                    velX = (int) (abs(velX) - cnfgPanFriction * abs(velX)) * xDir;
                 }
 
                 if (abs(velY) > 0){
                     int yDir = velY / abs(velY);
-                    velY = (int) (abs(velY) - PAN_FRICTION * abs(velY)) * yDir;
+                    velY = (int) (abs(velY) - cnfgPanFriction * abs(velY)) * yDir;
                 }
 
                 conLog.info("Run: vX, vY = {}, {}", velX, velY);
@@ -153,7 +153,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         endTrialAction = endTrAction;
 
         // Init
-//        focusAreaSize = Utils.mm2px(PanTaskPanel.FOCUS_SIZE_mm);
+//        focusAreaSize = Utils.mm2px(PanPanel.FOCUS_SIZE_mm);
         insideFocusStopwatch = Stopwatch.createUnstarted();
 
         // Add the focus area
@@ -171,8 +171,15 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         Server.get().addPropertyChangeListener(this);
 
         // Get config
-        PAN_GAIN = ExpFrame.config.getDouble(STRINGS.PAN_GAIN);
-        PAN_FRICTION = ExpFrame.config.getDouble(STRINGS.PAN_FRICTION);
+//        PAN_GAIN = ExpFrame.config.getDouble(STRINGS.PAN_GAIN);
+//        PAN_FRICTION = ExpFrame.config.getDouble(STRINGS.PAN_FRICTION);
+    }
+
+    public void setConfig(double panGain, double panFriction) {
+        cnfgPanGain = panGain;
+        cnfgPanFriction = panFriction;
+
+        conLog.info("New config set!");
     }
 
     @Override
@@ -503,7 +510,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
                     case Constants.STRINGS.PAN -> {
                         if (Constants.STRINGS.equals(memo.getMode(), Constants.STRINGS.VEL)) {
                             if (hasFocus) {
-                                pan(memo.getV1Float() * PAN_GAIN, memo.getV2Float() * PAN_GAIN);
+                                pan(memo.getV1Float() * cnfgPanGain, memo.getV2Float() * cnfgPanGain);
                             }
                         }
 

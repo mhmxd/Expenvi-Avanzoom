@@ -1,7 +1,5 @@
 package model;
 
-import enums.Task;
-
 import java.util.ArrayList;
 import java.util.List;
 

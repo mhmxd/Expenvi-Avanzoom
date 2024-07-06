@@ -1,12 +1,12 @@
 package ui;
 
 import control.Logex;
-import enums.Task;
+import enums.TaskType;
 import enums.TrialEvent;
 import enums.TrialStatus;
-import model.Block;
 import model.PanZoomTrial;
 import moose.Moose;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.*;
@@ -15,10 +15,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static tool.Constants.*;
-import static ui.ExpFrame.NUM_ZOOM_BLOCKS;
 
 public class PanZoomPanel
         extends TaskPanel
@@ -31,7 +31,6 @@ public class PanZoomPanel
     public final Dimension viewportDim = new Dimension(
             DISP.mmToPxW(VIEWPPORT_SIZE_mm),
             DISP.mmToPxH(VIEWPPORT_SIZE_mm));
-//    public final int VIEWPORT_SIZE = Utils.mm2px(VIEWPPORT_SIZE_mm);
 
     public static final double SCROLL_VP_SIZE_mm = 200;
 //    public static final double WHEEL_STEP_SIZE = 0.25;
@@ -49,14 +48,11 @@ public class PanZoomPanel
 
     public static final int MAX_ZOOM_LEVEL = 1700;
 
-    public static final double VT_SCROLL_BAR_W_mm = 5.0;
-    public static final double VT_SCROLL_THUMB_H_mm = 6.0;
-
     public static final String ZOOM_OUT_SVG_FILE_NAME = "zoom_out.svg";
     public static final String ZOOM_IN_SVG_FILE_NAME = "zoom_in.svg";
 
     // Experiment
-    private final Task task;
+    private final TaskType taskType;
     private final Moose moose;
     private final boolean startOnLeft;
 //    private final int vpSize; // Size of the viewport in px
@@ -65,19 +61,21 @@ public class PanZoomPanel
 
     // View
     PanZoomView panZoomView;
-    ZoomView zoomView;
-    VTScrollPane scrollPane;
+//    ZoomView zoomView;
+//    VTScrollPane scrollPane;
 //    private ZoomViewport zoomViewPort;
     private final ArrayList<MoCoord> zoomElements = new ArrayList<>(); // Hold the grid coords + ids
+
+    // Sound
 
     // -------------------------------------------------------------------------------------------
     /**
      * Constructor
      * @param dim Dimension – Desired dimension of the panel
      * @param ms Moose – Reference to the Moose
-     * @param tsk Task – Type of the task
+     * @param tsk TaskType – Type of the taskType
      */
-    public PanZoomPanel(Dimension dim, Moose ms, Task tsk) {
+    public PanZoomPanel(Dimension dim, Moose ms, TaskType tsk) {
         super(dim);
 
         setSize(dim);
@@ -88,7 +86,7 @@ public class PanZoomPanel
 //        scrollVPSize = Utils.mm2px(SCROLL_VP_SIZE_mm);
         lrMargin = DISP.mmToPxW(ExpFrame.LR_MARGIN_MM);
 
-        task = tsk;
+        taskType = tsk;
         moose = ms;
 
         createBlocks();
@@ -96,7 +94,7 @@ public class PanZoomPanel
         // Generate the zooming SVG
         N_ELEMENTS = (ExpFrame.MAX_NOTCHES / ExpFrame.NOTCHES_IN_ELEMENT) * 2 + 1;
 //        final int N_ELEMENTS = (ExpFrame.TOTAL_N_NOTCHES / ELEMENT_NOTCH_RATIO) + 1;
-        if (task.equals(Task.ZOOM_IN)) {
+        if (taskType.equals(TaskType.ZOOM_IN)) {
             SVGPatterner.genCircleGrid(
                     ZOOM_IN_SVG_FILE_NAME,
                     N_ELEMENTS,
@@ -144,6 +142,36 @@ public class PanZoomPanel
     }
 
     @Override
+    protected void loadConfig() {
+        try {
+            super.loadConfig();
+
+            List<String> keyValues = new ArrayList<>();
+
+            final String zoomNotchGainKey = String.join(".", STRINGS.WHEEL_NOTCH, STRINGS.GAIN);
+            final double zoomWheelNotchGain = config.getDouble(zoomNotchGainKey);
+            keyValues.add(zoomNotchGainKey + " = " + String.format("%.2f", zoomWheelNotchGain));
+
+            final String panGainKey = String.join(".",STRINGS.PAN, STRINGS.GAIN);
+            final double panGain = config.getDouble(panGainKey);
+            keyValues.add(panGainKey + " = " + String.format("%.2f", panGain));
+
+            final String panFrictionKey = String.join(".",STRINGS.PAN, STRINGS.FRICTION);
+            final double panFriction = config.getDouble(panFrictionKey);
+            keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
+
+            // Set in the scrollPane
+            panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction);
+
+            // Show config in the label
+            configLabel.setText(String.join(" | ", keyValues));
+
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
 
@@ -160,9 +188,9 @@ public class PanZoomPanel
     protected void createBlocks() {
         super.createBlocks();
 
-        for (int i = 0; i < NUM_ZOOM_BLOCKS; i++) {
-            blocks.add(new Block(i + 1, task, 1));
-        }
+//        for (int i = 0; i < NUM_ZOOM_BLOCKS; i++) {
+//            blocks.add(new Block(i + 1, taskType, 1));
+//        }
     }
 
     /**
@@ -187,7 +215,7 @@ public class PanZoomPanel
 //        progressLabel.setVisible(true);
 
         // Create the viewport for showing the trial
-        switch (task) {
+        switch (taskType) {
             case PAN_ZOOM -> {
                 panZoomView = new PanZoomView((PanZoomTrial) activeTrial);
 //                panZoomView.setBounds(
@@ -204,7 +232,7 @@ public class PanZoomPanel
             }
 
 //            case ZOOM_IN, ZOOM_OUT -> {
-//                zoomView = new ZoomView(task);
+//                zoomView = new ZoomView(taskType);
 //                zoomView.setBounds(
 //                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
 //                        vpSize, vpSize);

@@ -1,11 +1,11 @@
 package ui;
 
-//import enums.Task;
+//import enums.TaskType;
 //import enums.Technique;
 //import moose.Moose;
 //import control.Server;
 import control.Server;
-import enums.Task;
+import enums.TaskType;
 import enums.Technique;
 import moose.Moose;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -22,33 +22,23 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.List;
 
 import static tool.Constants.*;
 
 public class ExpFrame extends JFrame {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
-    public static String pID = "100";
+    public static String pID = "1000";
 
     private final String CONFIG_FILE_NAME = "config.properties";
-    private final Configurations configs = new Configurations();
     public static PropertiesConfiguration config;
 
     // Zoom -----------------------------------------------
-    public static final int NUM_ZOOM_BLOCKS = 10;
-    public static final int NUM_ZOOM_REPS = 5; // Repititions inside a block
-
     public static int MAX_NOTCHES = 120; // Arbitrary (between Win 44 and Mac 300)
-    public static int[] TARGET_DISTS = new int[]{15, 30, 60}; // In notches
     public static int NOTCHES_IN_ELEMENT = 6;
-    public static final int TARGET_TOLERANCE = 3; //  Tolerance (in notches)
-
-    public static final double NOTCH_GAIN_Z = 0.5;
 
     // Pan ------------------------------------------------
     public static final int NUM_PAN_BLOCKS = 2;
-    public static final int NUM_PAN_REPS = 6;
 
     public static final double PAN_MOOSE_GAIN = 0.5;
 
@@ -168,23 +158,23 @@ public class ExpFrame extends JFrame {
 
             // Get values from the info dialog
             pID = (String) getValue(STRINGS.PID);
-            Task task = (Task) getValue(STRINGS.TASK);
+            TaskType taskType = (TaskType) getValue(STRINGS.TASK);
             Technique technique = (Technique) getValue(STRINGS.TECHNIQUE);
 
             SwingUtilities.invokeLater(() -> {
-                // Create the panel based on the chosen task
+                // Create the panel based on the chosen taskType
                 TaskPanel taskPanel = null;
-                switch (task) {
+                switch (taskType) {
                     case ZOOM_OUT, ZOOM_IN, PAN_ZOOM -> {
-                        taskPanel = new PanZoomPanel(getContentPane().getSize(), moose, task);
+                        taskPanel = new PanZoomPanel(getContentPane().getSize(), moose, taskType);
                     }
 
                     case PAN -> {
-                        taskPanel = new PanTaskPanel(getContentPane().getSize(), moose, task);
+                        taskPanel = new PanPanel(getContentPane().getSize(), moose, taskType);
                     }
 
                     case SCROLL -> {
-                        taskPanel = new ScrollPanel(getContentPane().getSize(), moose, task);
+                        taskPanel = new ScrollPanel(getContentPane().getSize(), moose, taskType);
                     }
                 }
 

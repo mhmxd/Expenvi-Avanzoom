@@ -35,7 +35,9 @@ public class TaskPanel extends JLayeredPane {
 
     // Config
     private final String CONFIG_FILE_NAME = "config.properties";
+    private final String DESIGN_FILE_NAME = "design.properties";
     public PropertiesConfiguration config;
+    public PropertiesConfiguration expDesign;
 
     // UI
     JLabel progressLabel = new JLabel();
@@ -103,6 +105,20 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void createBlocks() {
+        // Load the experiment designs
+        try {
+            expDesign =
+                    new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+                    .configure(new Parameters()
+                            .properties()
+                            .setFileName(DESIGN_FILE_NAME)
+                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
+                    .getConfiguration();
+        } catch (ConfigurationException e) {
+            conLog.error("Could not load experiment design factors!");
+            throw new RuntimeException(e);
+        }
+
         // Implemented by the subclasses
     }
 
@@ -159,7 +175,7 @@ public class TaskPanel extends JLayeredPane {
 
     protected void endBlock() {
         if (blocks.size() == activeBlock.blockNum) { // No more blocks
-            conLog.info("Task Ended!");
+            conLog.info("TaskType Ended!");
             endTask();
         } else { // More blocks -> show break -> (action) next block
             showBreak();
@@ -178,7 +194,7 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void endTask() {
-        endTaskLabel.setText("Task finished. Thank You!");
+        endTaskLabel.setText("TaskType finished. Thank You!");
         endTaskLabel.setFont(new Font("Roboto", Font.BOLD, 50));
         endTaskLabel.setForeground(COLORS.BLACK);
         endTaskLabel.setSize(700, 50);
