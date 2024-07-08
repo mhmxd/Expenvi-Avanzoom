@@ -4,6 +4,7 @@ import control.Logex;
 import enums.TaskType;
 import enums.TrialEvent;
 import enums.TrialStatus;
+import model.PanZoomBlock;
 import model.PanZoomTrial;
 import moose.Moose;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -130,11 +131,21 @@ public class PanZoomPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 conLog.info("SPACE Pressed");
-                final boolean result = wasTrialSeccess();
-                conLog.debug("Result = {}", result);
+                final boolean isSuccess = isTrialSuccess();
+                conLog.debug("Result = {}", isSuccess);
+
+                if (isSuccess) {
+                    Sounder.playHit();
+                    endTrial(TrialStatus.SUCCESS);
+                } else {
+                    Sounder.playMiss();
+                    // TODO Shuffle trial in the block
+                    endTrial(TrialStatus.FAIL);
+                }
+
                 remove(panZoomView);
 //                Resources.SVG.refresh();
-                endTrial(TrialStatus.HIT);
+
 //                panZoomView.colorAction.actionPerformed(e);
 //                zoomView.colorAction.actionPerformed(e);
             }
@@ -143,42 +154,34 @@ public class PanZoomPanel
 
     @Override
     protected void loadConfig() {
-        try {
-            super.loadConfig();
+        //            super.loadConfig();
 
-            List<String> keyValues = new ArrayList<>();
+        List<String> keyValues = new ArrayList<>();
 
-            final String zoomNotchGainKey = String.join(".", STRINGS.WHEEL_NOTCH, STRINGS.GAIN);
-            final double zoomWheelNotchGain = config.getDouble(zoomNotchGainKey);
-            keyValues.add(zoomNotchGainKey + " = " + String.format("%.2f", zoomWheelNotchGain));
+        final String zoomNotchGainKey = String.join(".", STR.ZOOM, STR.WHEEL_NOTCH, STR.GAIN);
+        final double zoomWheelNotchGain = config.getDouble(zoomNotchGainKey);
+        keyValues.add(zoomNotchGainKey + " = " + String.format("%.2f", zoomWheelNotchGain));
 
-            final String panGainKey = String.join(".",STRINGS.PAN, STRINGS.GAIN);
-            final double panGain = config.getDouble(panGainKey);
-            keyValues.add(panGainKey + " = " + String.format("%.2f", panGain));
+        final String panGainKey = String.join(".", STR.PAN, STR.GAIN);
+        final double panGain = config.getDouble(panGainKey);
+        keyValues.add(panGainKey + " = " + String.format("%.2f", panGain));
 
-            final String panFrictionKey = String.join(".",STRINGS.PAN, STRINGS.FRICTION);
-            final double panFriction = config.getDouble(panFrictionKey);
-            keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
+        final String panFrictionKey = String.join(".", STR.PAN, STR.FRICTION);
+        final double panFriction = config.getDouble(panFrictionKey);
+        keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
 
-            // Set in the scrollPane
-            panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction);
+        // Set in the scrollPane
+        panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction);
 
-            // Show config in the label
-            configLabel.setText(String.join(" | ", keyValues));
+        // Show config in the label
+        configLabel.setText(String.join(" | ", keyValues));
 
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
-
-        if (aFlag) {
-            // Begin
-            starTask();
-        }
+        if (aFlag) starTask();
     }
 
     /**
@@ -188,9 +191,10 @@ public class PanZoomPanel
     protected void createBlocks() {
         super.createBlocks();
 
-//        for (int i = 0; i < NUM_ZOOM_BLOCKS; i++) {
-//            blocks.add(new Block(i + 1, taskType, 1));
-//        }
+        final String key = String.join(".", STR.PANZOOM, STR.NUM, STR.BLOCKS);
+        for (int b = 0; b < expDesign.getInt(key); b++) {
+            blocks.add(new PanZoomBlock(b + 1));
+        }
     }
 
     /**
@@ -215,46 +219,21 @@ public class PanZoomPanel
 //        progressLabel.setVisible(true);
 
         // Create the viewport for showing the trial
-        switch (taskType) {
-            case PAN_ZOOM -> {
-                panZoomView = new PanZoomView((PanZoomTrial) activeTrial);
+        panZoomView = new PanZoomView((PanZoomTrial) activeTrial);
 //                panZoomView.setBounds(
 //                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
 //                        vpSize, vpSize);
 //                panZoomView.setBounds(0, 0, getWidth(), getHeight());
-                panZoomView.setBounds(
-                        (getWidth() - viewportDim.width) / 2, (getHeight() - viewportDim.height)/2,
-                        viewportDim.width, viewportDim.height);
+        panZoomView.setBounds(
+                (getWidth() - viewportDim.width) / 2, (getHeight() - viewportDim.height)/2,
+                viewportDim.width, viewportDim.height);
 //                panZoomView.setDim(VIEWPORT_SIZE);
 //                panZoomView.setPos(new MoPoint( (getWidth() - VIEWPORT_SIZE)/2, (getHeight() - VIEWPORT_SIZE)/2));
-                panZoomView.setVisible(true);
-                add(panZoomView, JLayeredPane.PALETTE_LAYER);
-            }
+        panZoomView.setVisible(true);
+        add(panZoomView, JLayeredPane.DEFAULT_LAYER);
 
-//            case ZOOM_IN, ZOOM_OUT -> {
-//                zoomView = new ZoomView(taskType);
-//                zoomView.setBounds(
-//                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
-//                        vpSize, vpSize);
-//                zoomView.setVisible(true);
-//                zoomView.setBorder(Constants.BORDERS.BLACK_BORDER);
-//                add(zoomView, JLayeredPane.PALETTE_LAYER);
-//            }
-
-//            case SCROLL -> {
-//                scrollPane = new VTScrollPane(new MoDimension(scrollVPSize))
-//                        .setText("lorem")
-//                        .setScrollBar(VT_SCROLL_BAR_W_mm, VT_SCROLL_THUMB_H_mm)
-//                        .create();
-//                scrollPane.setBounds(
-//                        (getWidth() - scrollVPSize)/2, (getHeight() - scrollVPSize)/2,
-//                        scrollVPSize, scrollVPSize);
-//                scrollPane.setLocation((getWidth() - scrollVPSize)/2, (getHeight() - scrollVPSize)/2);
-//                scrollPane.setWheelEnabled(true);
-//                scrollPane.setVisible(true);
-//                add(scrollPane, JLayeredPane.PALETTE_LAYER);
-//            }
-        }
+        // Load config
+        loadConfig();
 
         // Log
         Logex.get().activateTrial(activeTrial);
@@ -262,9 +241,9 @@ public class PanZoomPanel
     }
 
     @Override
-    protected boolean wasTrialSeccess() {
+    protected boolean isTrialSuccess() {
         // Check the circles inside the square
-        return panZoomView.isViewAlignedToDest();
+        return panZoomView.isSuccess();
     }
 
     // Actions -----------------------------------------------------------------------------------
@@ -287,7 +266,7 @@ public class PanZoomPanel
 
             conLog.debug("En->lZ = {}, fZ->lZ = {}", enterToLastZoom, firstZoomToLastZoom);
 
-            endTrial(TrialStatus.HIT);
+            endTrial(TrialStatus.FAIL);
         }
     };
 
@@ -336,6 +315,7 @@ public class PanZoomPanel
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         // TODO Show error if not over the ViewPort
+        conLog.info("Wheeling...");
     }
 
     // Moose --------------------------------------------------------------------------------------

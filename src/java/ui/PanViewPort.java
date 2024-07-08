@@ -17,7 +17,6 @@ import moose.Memo;
 import moose.Moose;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
-import tool.Constants;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -171,8 +170,8 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         Server.get().addPropertyChangeListener(this);
 
         // Get config
-//        PAN_GAIN = ExpFrame.config.getDouble(STRINGS.PAN_GAIN);
-//        PAN_FRICTION = ExpFrame.config.getDouble(STRINGS.PAN_FRICTION);
+//        PAN_GAIN = ExpFrame.config.getDouble(STR.PAN_GAIN);
+//        PAN_FRICTION = ExpFrame.config.getDouble(STR.PAN_FRICTION);
     }
 
     public void setConfig(double panGain, double panFriction) {
@@ -335,7 +334,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
             isTrialActive = false;
             hasFocus = false;
             ActionEvent endTrialEvent = (wasTrialAccurate())
-                    ? new ActionEvent(this, TrialStatus.HIT, "")
+                    ? new ActionEvent(this, TrialStatus.FAIL, "")
                     : new ActionEvent(this, TrialStatus.ERROR, TrialStatus.TEN_PERCENT_OUT);
             endTrialAction.actionPerformed(endTrialEvent);
         }
@@ -493,33 +492,33 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         // Is it relate to Moose?
-        if (Constants.STRINGS.equals(evt.getPropertyName(), Constants.STRINGS.MOOSE)) {
+        if (STR.equals(evt.getPropertyName(), STR.MOOSE)) {
             if (evt.getNewValue() != null) {
                 Memo memo = (Memo) evt.getNewValue();
 
                 switch (memo.getAction()) {
-//                    case Constants.STRINGS.GRAB -> {
+//                    case Constants.STR.GRAB -> {
 //                        // Grab if happened inside
 //                        if (isCursorInside) {
 //                            grab();
 //                        }
 //                    }
 
-//                    case Constants.STRINGS.REL -> release();
+//                    case Constants.STR.REL -> release();
 
-                    case Constants.STRINGS.PAN -> {
-                        if (Constants.STRINGS.equals(memo.getMode(), Constants.STRINGS.VEL)) {
+                    case STR.PAN -> {
+                        if (STR.equals(memo.getMode(), STR.VEL)) {
                             if (hasFocus) {
                                 pan(memo.getV1Float() * cnfgPanGain, memo.getV2Float() * cnfgPanGain);
                             }
                         }
 
-                        if (Constants.STRINGS.equals(memo.getMode(), Constants.STRINGS.STOP)) {
+                        if (STR.equals(memo.getMode(), STR.STOP)) {
                             panner.shutdownNow();
                         }
                     }
 
-//                    case Constants.STRINGS.ZOOM -> {
+//                    case Constants.STR.ZOOM -> {
 //                        zoom(memo.getV1Int());
 //                    }
                 }

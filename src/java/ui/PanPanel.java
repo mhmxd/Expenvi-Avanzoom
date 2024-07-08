@@ -16,7 +16,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.*;
-import java.util.List;
 import java.util.Timer;
 
 import static tool.Constants.*;
@@ -79,22 +78,21 @@ public class PanPanel extends TaskPanel {
 
     @Override
     protected void loadConfig() {
-        try {
-            super.loadConfig();
+        super.loadConfig();
 
-            // TODO Fill
+        // TODO Fill
 
 //            List<String> keyValues = new ArrayList<>();
 //
-//            final String zoomNotchGainKey = String.join(".", STRINGS.WHEEL_NOTCH, STRINGS.GAIN);
+//            final String zoomNotchGainKey = String.join(".", STR.WHEEL_NOTCH, STR.GAIN);
 //            final double zoomWheelNotchGain = config.getDouble(zoomNotchGainKey);
 //            keyValues.add(zoomNotchGainKey + " = " + String.format("%.2f", zoomWheelNotchGain));
 //
-//            final String panGainKey = String.join(".",STRINGS.PAN, STRINGS.GAIN);
+//            final String panGainKey = String.join(".",STR.PAN, STR.GAIN);
 //            final double panGain = config.getDouble(panGainKey);
 //            keyValues.add(panGainKey + " = " + String.format("%.2f", panGain));
 //
-//            final String panFrictionKey = String.join(".",STRINGS.PAN, STRINGS.FRICTION);
+//            final String panFrictionKey = String.join(".",STR.PAN, STR.FRICTION);
 //            final double panFriction = config.getDouble(panFrictionKey);
 //            keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
 //
@@ -104,9 +102,6 @@ public class PanPanel extends TaskPanel {
 //            // Show config in the label
 //            configLabel.setText(String.join(" | ", keyValues));
 
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -233,7 +228,7 @@ public class PanPanel extends TaskPanel {
                         TrialEvent.getLast(TrialEvent.PAN));
 
                 conLog.info("Time: FP-LP = {}", firstPanToLastPan);
-                endTrial(TrialStatus.HIT);
+                endTrial(TrialStatus.FAIL);
             }
         }
     };

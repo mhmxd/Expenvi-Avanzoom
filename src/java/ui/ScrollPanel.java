@@ -5,10 +5,11 @@ import enums.TaskType;
 import model.ScrollBlock;
 import model.ScrollTrial;
 import moose.Moose;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.Constants;
+import tool.MoDimension;
+import tool.MoRect;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +36,7 @@ public class ScrollPanel extends TaskPanel{
 
     // View
     private VTScrollPane scrollPane;
+    private JPanel indicator = new JPanel();
 
     // Config
     private String configStr;
@@ -76,45 +78,38 @@ public class ScrollPanel extends TaskPanel{
 
     @Override
     protected void loadConfig() {
-        try {
-            super.loadConfig();
+        super.loadConfig();
 
-            List<String> keyValues = new ArrayList<>();
+        List<String> keyValues = new ArrayList<>();
 
-            final String flingVelGainKey = String.join(".",
-                    STRINGS.FLING, STRINGS.VELOCITY, STRINGS.GAIN);
-            final double flingVelGain = config.getDouble(flingVelGainKey);
-            keyValues.add(flingVelGainKey + " = " + String.format("%.2f", flingVelGain));
+        final String flingVelGainKey = String.join(".",
+                STR.FLING, STR.VELOCITY, STR.GAIN);
+        final double flingVelGain = config.getDouble(flingVelGainKey);
+        keyValues.add(flingVelGainKey + " = " + String.format("%.2f", flingVelGain));
 
-            final String flingVelFrictionKey = String.join(".",
-                    STRINGS.FLING, STRINGS.VELOCITY, STRINGS.FRICTION);
-            final double flingVelFriction = config.getDouble(flingVelFrictionKey);
-            keyValues.add(flingVelFrictionKey + " = " + String.format("%.2f", flingVelFriction));
+        final String flingVelFrictionKey = String.join(".",
+                STR.FLING, STR.VELOCITY, STR.FRICTION);
+        final double flingVelFriction = config.getDouble(flingVelFrictionKey);
+        keyValues.add(flingVelFrictionKey + " = " + String.format("%.2f", flingVelFriction));
 
-            final String flingMinVelocityKey = String.join(".",
-                    STRINGS.FLING, STRINGS.MIN, STRINGS.VELOCITY);
-            final double flingMinVelocity = config.getDouble(flingMinVelocityKey);
-            keyValues.add(flingMinVelocityKey + " = " + String.format("%.2f", flingMinVelocity));
+        final String flingMinVelocityKey = String.join(".",
+                STR.FLING, STR.MIN, STR.VELOCITY);
+        final double flingMinVelocity = config.getDouble(flingMinVelocityKey);
+        keyValues.add(flingMinVelocityKey + " = " + String.format("%.2f", flingMinVelocity));
 
-            // Set in the scrollPane
-            scrollPane.setConfig(flingVelGain, flingVelFriction, flingMinVelocity);
+        // Set in the scrollPane
+        scrollPane.setConfig(flingVelGain, flingVelFriction, flingMinVelocity);
 
-            // Show config in the label
-            configLabel.setText(String.join(" | ", keyValues));
+        // Show config in the label
+        configLabel.setText(String.join(" | ", keyValues));
 
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
 
-        if (aFlag) {
-            // Begin
-            starTask();
-        }
+        if (aFlag) starTask();
     }
 
     @Override
@@ -122,15 +117,19 @@ public class ScrollPanel extends TaskPanel{
         super.createBlocks();
 
         // Extract the design factor values
-        final String prefix = "scroll.";
-        final int numBlocks = expDesign.getInt(prefix + STRINGS.NUM_BLOCKS);
-        final List<Direction> directions = expDesign.getList(Direction.class, prefix + STRINGS.DIRECTIONS);
-        final List<Integer> distances = expDesign.getList(Integer.class, prefix + STRINGS.DISTANCES);
-        final List<Integer> indicSizes = expDesign.getList(Integer.class, prefix + STRINGS.INDICATOR_SIZES);
+        final String prefix = "scroll";
+        final int numBlocks = expDesign.getInt(
+                String.join(".", prefix, STR.NUM, STR.BLOCKS));
+        final List<Direction> directions = expDesign.getList(Direction.class,
+                String.join(".", prefix, STR.DIRECTIONS));
+        final List<Integer> distances = expDesign.getList(Integer.class,
+                String.join(".", prefix, STR.DISTANCES));
+        final List<Integer> tolerances = expDesign.getList(Integer.class,
+                String.join(".", prefix, STR.TOLERANCES));
 
         // Create blocks
         for (int b = 1; b <= numBlocks; b++) {
-            blocks.add(new ScrollBlock(b, directions, distances, indicSizes));
+            blocks.add(new ScrollBlock(b, directions, distances, tolerances));
         }
 
         conLog.info("Blocks: {}", blocks);
@@ -149,6 +148,7 @@ public class ScrollPanel extends TaskPanel{
     protected void showActiveTrial() {
         final ScrollTrial trial = (ScrollTrial) activeTrial;
 
+        // Set up and add the scrollPane
         scrollPane = new VTScrollPane()
                 .setText("lorem", DISP.mmToPxW(TEXT_W_mm), true)
                 .setScrollBar(SCROLL_BAR_W_mm, SCROLL_THUMB_H_mm)
@@ -156,11 +156,26 @@ public class ScrollPanel extends TaskPanel{
         scrollPane.setBounds(
                 (getWidth() - viewportDim.width) / 2, (getHeight() - viewportDim.height) / 2,
                 viewportDim.width, viewportDim.height);
-//        scrollPane.setLocation((getWidth() - SCROLL_VP_SIZE)/2, (getHeight() - SCROLL_VP_SIZE)/2);
         scrollPane.setWheelEnabled(true);
+        scrollPane.setTrial(trial);
         scrollPane.setVisible(true);
 
         add(scrollPane, DEFAULT_LAYER);
+
+        // Set up and add the indicator
+        final int lineH = scrollPane.getLineHeight();
+        final double indicWidthMM = config.getDouble(
+                String.join(".", STR.SCROLL, STR.INDICATOR, STR.WIDTH));
+
+        indicator.setSize(new Dimension(
+                DISP.mmToPxW(indicWidthMM),
+                trial.tolerance * lineH));
+        indicator.setLocation(
+                scrollPane.getX() - indicator.getWidth(),
+                scrollPane.getY() + ((scrollPane.getNLinesInside() - trial.tolerance) / 2) * lineH);
+        indicator.setBackground(COLORS.BLUE);
+
+        add(indicator, DEFAULT_LAYER);
 
         // Show progress info
         progressLabel.setText(String.format("Block %d – Trial %d", activeBlock.blockNum, activeTrial.trialNum));

@@ -10,7 +10,6 @@ import enums.Technique;
 import moose.Moose;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -152,14 +151,14 @@ public class ExpFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             conLog.trace("Info: {}, {}, {}",
-                    getValue(STRINGS.PID),
-                    getValue(STRINGS.TASK),
-                    getValue(STRINGS.TECHNIQUE));
+                    getValue(STR.PID),
+                    getValue(STR.TASK),
+                    getValue(STR.TECHNIQUE));
 
             // Get values from the info dialog
-            pID = (String) getValue(STRINGS.PID);
-            TaskType taskType = (TaskType) getValue(STRINGS.TASK);
-            Technique technique = (Technique) getValue(STRINGS.TECHNIQUE);
+            pID = (String) getValue(STR.PID);
+            TaskType taskType = (TaskType) getValue(STR.TASK);
+            Technique technique = (Technique) getValue(STR.TECHNIQUE);
 
             SwingUtilities.invokeLater(() -> {
                 // Create the panel based on the chosen taskType

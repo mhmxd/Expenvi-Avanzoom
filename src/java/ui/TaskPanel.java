@@ -7,7 +7,6 @@ import model.Block;
 import model.Trial;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -54,6 +53,9 @@ public class TaskPanel extends JLayeredPane {
     public TaskPanel(Dimension dim) {
         conLog.info("Width: {}", DISP.mmToPxH(10));
 
+        // Lod the config file
+        loadConfigFile();
+
         // Set up progress label
         progressLabel.setBounds(
                 dim.width - DISP.mmToPxW(PRG_LBL_RIGHT) - PRG_LBL_DIM.width,
@@ -71,6 +73,12 @@ public class TaskPanel extends JLayeredPane {
                 DISP.mmToPxW(20),
                 dim.height - DISP.mmToPxH(20) - 50,
                 200, 50);
+        configButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadConfig();
+            }
+        });
 
         // Set up the config label
         configLabel.setText("Press the button to load config");
@@ -89,19 +97,22 @@ public class TaskPanel extends JLayeredPane {
 
     }
 
-    protected void loadConfig() throws ConfigurationException {
-        config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-                .configure(new Parameters()
-                        .properties()
-                        .setFileName(CONFIG_FILE_NAME)
-                        .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
-                .getConfiguration();
+    private void loadConfigFile() {
+        try {
+            config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+                    .configure(new Parameters()
+                            .properties()
+                            .setFileName(CONFIG_FILE_NAME)
+                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
+                    .getConfiguration();
+        } catch (ConfigurationException e) {
+            conLog.error("Problem in loading the config file!");
+            throw new RuntimeException(e);
+        }
+    }
 
-//        try {
-//
-//        } catch (ConfigurationException ex) {
-//            throw new RuntimeException(ex);
-//        }
+    protected void loadConfig() {
+        // Implemented by the children
     }
 
     protected void createBlocks() {
@@ -148,7 +159,7 @@ public class TaskPanel extends JLayeredPane {
         // Implemented by the subclasses...
     }
 
-    protected boolean wasTrialSeccess() {
+    protected boolean isTrialSuccess() {
         return false;
     }
 
@@ -157,7 +168,7 @@ public class TaskPanel extends JLayeredPane {
         double openToClose = Logex.get().getDurationSec(TrialEvent.TRIAL_OPEN, TrialEvent.TRIAL_CLOSE);
         conLog.debug("Time: Open to Close = {}", openToClose);
         conLog.debug("--------------------------");
-        if (status == TrialStatus.HIT) {
+        if (status == TrialStatus.FAIL) {
             if (activeBlock.isBlockFinished(activeTrial.trialNum)) { // Block finished -> show break|end
                 conLog.info("Block Finished");
                 endBlock(); // Got to the next block (checks are done inside that method)

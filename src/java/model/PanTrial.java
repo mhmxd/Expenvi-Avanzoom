@@ -1,8 +1,8 @@
 package model;
 
-import java.net.URI;
+import tool.Resources;
 
-import static tool.Resources.SVG;
+import java.net.URI;
 
 public class PanTrial extends Trial {
     public int level;
@@ -14,9 +14,9 @@ public class PanTrial extends Trial {
 
         this.level = level;
         switch (level) {
-            case 1 -> uri = SVG.PAN_LVL1_URI;
-            case 2 -> uri = SVG.PAN_LVL2_URI;
-            case 3 -> uri = SVG.PAN_LVL3_URI;
+            case 1 -> uri = Resources.PAN_LVL1_URI;
+            case 2 -> uri = Resources.PAN_LVL2_URI;
+            case 3 -> uri = Resources.PAN_LVL3_URI;
         }
 
         this.rotation = rotation;

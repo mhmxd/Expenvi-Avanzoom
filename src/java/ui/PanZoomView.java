@@ -155,14 +155,6 @@ public class PanZoomView extends JPanel
         conLog.info("New config set!");
     }
 
-//    public void setDim(int size) {
-//        dim = new MoDimension(size);
-//    }
-//
-//    public void setPos(MoPoint pos) {
-//        this.pos = pos;
-//    }
-
     @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
@@ -175,10 +167,10 @@ public class PanZoomView extends JPanel
 //                -(planesDim.height - getHeight())/2);
 
         // Create planes (w/ this as initial dimension)
-        plainPlane = new MoPlane(Resources.SVG.PLAN_URI);
+        plainPlane = new MoPlane(Resources.SVG_PLAN_URI);
         plainPlane.setBounds(planePos, getSize());
 
-        trialPlane = new MoPlane(Resources.SVG.PLAN_URI);
+        trialPlane = new MoPlane(Resources.SVG_PLAN_URI);
         trialPlane.setBounds(planePos, getSize());
         trialPlane.setTrialParts(1, 30);
 
@@ -471,7 +463,7 @@ public class PanZoomView extends JPanel
 
         double prcnt = -dZ/100.0;
         focalZoomPercent(relPoint, prcnt);
-        conLog.trace("Prcnt = {}", prcnt);
+        conLog.info("Prcnt = {}", prcnt);
 //        MoDimension fieldNewDim = new MoDimension(fieldDim, (1 + prcnt));
 //        double newFieldW = prcnt * fieldDim.width;
 //        double newFieldH = prcnt * fieldDim.height;
@@ -609,7 +601,11 @@ public class PanZoomView extends JPanel
         dragPoint = null;
     }
 
-    public boolean isViewAlignedToDest() {
+    /**
+     * Check if the trial is a hit (destination matches the view)
+     * @return True if Hit, false otherwise
+     */
+    public boolean isSuccess() {
         // Get the zoom dest sqs coords relative to this view
         MoRect destMaxZoomSq = trialPlane.getDestMaxZoomSq();
         MoRect destMinZoomSq = trialPlane.getDestMinZoomSq();
@@ -690,7 +686,7 @@ public class PanZoomView extends JPanel
     public void mouseWheelMoved(MouseWheelEvent e) {
 //        final int dZ = e.getWheelRotation();
 //        detent -= dZ; // Zoom-in -> must be +
-        conLog.trace("Rotation = {}, Prec. Rot = {}",
+        conLog.info("Rotation = {}, Prec. Rot = {}",
                 e.getWheelRotation(), e.getPreciseWheelRotation());
         final double dZ = e.getPreciseWheelRotation() * cnfgZoomWheelNotchGain;
         zoom(dZ);
@@ -732,39 +728,39 @@ public class PanZoomView extends JPanel
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         // Is it relate to Moose?
-        if (STRINGS.equals(evt.getPropertyName(), STRINGS.MOOSE)) {
+        if (STR.equals(evt.getPropertyName(), STR.MOOSE)) {
             if (evt.getNewValue() != null) {
                 Memo memo = (Memo) evt.getNewValue();
 
                 switch (memo.getAction()) {
-                    case STRINGS.GRAB -> {
+                    case STR.GRAB -> {
                         // Grab if happened inside
                         if (isCursorInside) {
                             grab();
                         }
                     }
 
-                    case STRINGS.REL -> release();
+                    case STR.REL -> release();
 
-                    case STRINGS.PAN -> {
+                    case STR.PAN -> {
 
                         // Pan displace
-                        if (STRINGS.equals(memo.getMode(), STRINGS.DISPLACE)) {
+                        if (STR.equals(memo.getMode(), STR.DISPLACE)) {
                             panDisplace((int) (memo.getV1Float()), (int) (memo.getV2Float()));
                         }
 
                         // Zoom
-                        if (STRINGS.equals(memo.getMode(), STRINGS.STOP)) {
+                        if (STR.equals(memo.getMode(), STR.STOP)) {
                             panner.shutdownNow();
                         }
                     }
 
-                    case STRINGS.FLING -> {
+                    case STR.FLING -> {
                         conLog.info("Flinging...");
                         panFling(memo.getV1Float() * cnfgFlingGain, memo.getV2Float() * cnfgFlingGain);
                     }
 
-                    case STRINGS.ZOOM -> {
+                    case STR.ZOOM -> {
                         setZoomLevel(memo.getV1Int());
                     }
                 }

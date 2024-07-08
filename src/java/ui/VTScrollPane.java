@@ -1,8 +1,9 @@
 package ui;
 
 import control.Server;
+import enums.Direction;
+import model.ScrollTrial;
 import moose.Memo;
-import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.MinMax;
@@ -34,12 +35,24 @@ import static tool.Constants.*;
 public class VTScrollPane extends JScrollPane implements MouseListener, MouseWheelListener, PropertyChangeListener {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
+    // Local Constants
+    private final Color COLOR_VIEW_BORDER = COLORS.PLATINIUM;
+    private final Color COLOR_LINE_NUM_BACK = COLORS.LIGHT_GRAY;
+    private final Color COLOR_SCROLLBAR_TRACK = COLORS.VERY_LIGHT_GRAY;
+    private final Color COLOR_SCROLLBAR_THUMB = COLORS.GRAY_76;
+    private final Color COLOR_LINE_HIGHLIGHT = COLORS.BLUE;
+    private final Color COLOR_INDICATOR = COLORS.DARK_GREEN;
+
+    private final int WRAP_CHARS_COUNT = 70;
+    private final float TEXT_FONT_SIZE = 20f;
+    private final float TEXT_LINE_SPACING = 0.193f;
+
 //    private final int WRAP_CHARS_COUNT = 67;
 //    private final String WRAPPED_FILE_NAME = "./res/wrapped.txt";
 
 //    private final Dimension dim; // in px
     private ArrayList<Integer> charCountInLines = new ArrayList<>();
-    private int mNumLines;
+    private int nLines;
 
     // Elements
     private JTextPane linesTextPane;
@@ -72,17 +85,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 //    private ScrollInfo mScrollInfo = new ScrollInfo();
     private int nTargetAppear;
 
-    // Local Constants
-    private final Color COLOR_VIEW_BORDER = COLORS.PLATINIUM;
-    private final Color COLOR_LINE_NUM_BACK = COLORS.LIGHT_GRAY;
-    private final Color COLOR_SCROLLBAR_TRACK = COLORS.VERY_LIGHT_GRAY;
-    private final Color COLOR_SCROLLBAR_THUMB = COLORS.GRAY_76;
-    private final Color COLOR_LINE_HIGHLIGHT = COLORS.BLUE;
-    private final Color COLOR_INDICATOR = COLORS.DARK_GREEN;
-
-    private final int WRAP_CHARS_COUNT = 70;
-    private final float TEXT_FONT_SIZE = 20f;
-    private final float TEXT_LINE_SPACING = 0.193f;
+    // Trial
+    private ScrollTrial activeTrial;
 
     //-------------------------------------------------------------------------------------------------
 
@@ -95,12 +99,12 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 //        conLog.debug("Dim = {}", dim);
 
         // Get configs
-//        VELOCITY_GAIN = ExpFrame.config.getDouble(STRINGS.VELOCITY_GAIN);
-//        VELOCITY_GAIN = (get).getConfig().getDouble(STRINGS.VELOCITY_GAIN);
-//        VELOCITY_FRICTION = ExpFrame.config.getDouble(STRINGS.VELOCITY_FRICTION);
-//        MIN_FLING_VELOCITY = ExpFrame.config.getDouble(STRINGS.MIN_FLING_VELOCITY);
+//        VELOCITY_GAIN = ExpFrame.config.getDouble(STR.VELOCITY_GAIN);
+//        VELOCITY_GAIN = (get).getConfig().getDouble(STR.VELOCITY_GAIN);
+//        VELOCITY_FRICTION = ExpFrame.config.getDouble(STR.VELOCITY_FRICTION);
+//        MIN_FLING_VELOCITY = ExpFrame.config.getDouble(STR.MIN_FLING_VELOCITY);
 //
-//        conLog.debug("Config: {}, {}, {}", config.getDouble(STRINGS.VELOCITY_GAIN),
+//        conLog.debug("Config: {}, {}, {}", config.getDouble(STR.VELOCITY_GAIN),
 //                VELOCITY_FRICTION, MIN_FLING_VELOCITY);
     }
 
@@ -125,7 +129,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             }
 
             // Set the number of lines
-            mNumLines = charCountInLines.size();
+            nLines = charCountInLines.size();
 
             // Body of text
             bodyTextPane = new CustomTextPane(false, textWidth);
@@ -240,11 +244,14 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 
         Server.get().addPropertyChangeListener(this);
 
-//        this.config = config;
-
-//        conLog.info("Config: {}", config.getDouble(STRINGS.VELOCITY_GAIN));
-
         return this;
+    }
+
+    public void setTrial(ScrollTrial trial) {
+        activeTrial = trial;
+
+        // Highlight the line
+        highlight(randLineInd());
     }
 
     /**
@@ -258,9 +265,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     /**
      * Highlight a line indicated by targetLineInd
      * @param targetLineInd Index of the line (starting from 1)
-     * @param frameSizeLines Size of the frame (in lines)
      */
-    public void highlight(int targetLineInd, int frameSizeLines) {
+    public void highlight(int targetLineInd) {
 
         // Highlight line
         try {
@@ -269,7 +275,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
                 stIndex += charCountInLines.get(li) + 1; // prev. lines + \n
             }
             int endIndex = stIndex + charCountInLines.get(targetLineInd); // highlight the whole line
-//            Logs.d(TAG, charCountInLines.size(), targetLineInd, frameSizeLines, stIndex, endIndex);
+//            Logs.d(TAG, charCountInLines.size(), targetLineInd, indicSize, stIndex, endIndex);
             DefaultHighlighter.DefaultHighlightPainter highlighter =
                     new DefaultHighlighter
                     .DefaultHighlightPainter(COLOR_LINE_HIGHLIGHT);
@@ -281,13 +287,13 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             e.printStackTrace();
         }
 
-        // Indicator
-        int nVisibleLines = getNVisibleLines();
-        int frOffset = (nVisibleLines - frameSizeLines) / 2;
+        // Scrollbar hint
+        int nVisibleLines = getNLinesInside();
+        int indicOffset = (nVisibleLines - activeTrial.tolerance) / 2;
         int lineH = getLineHeight();
 
-        targetMinMax.setMin((targetLineInd - (frameSizeLines - 1) - frOffset) * lineH);
-        targetMinMax.setMax((targetLineInd - frOffset) * lineH);
+        targetMinMax.setMin(((targetLineInd - (activeTrial.tolerance) - 1) - indicOffset) * lineH);
+        targetMinMax.setMax((targetLineInd - activeTrial.tolerance) * lineH);
 
         scrollBarUI.setIndicator(
                 COLOR_LINE_HIGHLIGHT,
@@ -298,12 +304,137 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         scrollBarUI.setVtIndicator(COLOR_INDICATOR, targetPos);
 
         getVerticalScrollBar().setUI(scrollBarUI);
-//        Logs.d(TAG, "Indicator", nVisibleLines, frameSizeLines, frOffset, lineH,
-//                mTargetMinMax.getMin(), mTargetMinMax.getMax());
 
         //-- Set the scroll values once
         mTargetFullVisScVals.setMin((targetLineInd - nVisibleLines + 1) * lineH);
         mTargetFullVisScVals.setMax(targetLineInd * lineH);
+    }
+
+    /**
+     * Count the number of lines and chars in each line
+     * Line num = number of \n
+     */
+    public void countLines(String filePath) {
+        try {
+            String content = Files.readString(Path.of(filePath));
+            String[] lines = content.split("\n");
+            for (String line : lines) {
+                charCountInLines.add(line.length());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Get the line numbers to show
+     * @param nLines Number of lines
+     * @return String of line numbers
+     */
+    public String getLineNumbers(int nLines) {
+//        Logs.d(this.getClass().getName(), "Total lines = " + nLines);
+        StringBuilder text = new StringBuilder("0" + System.lineSeparator());
+        for(int i = 1; i < nLines + 1; i++){
+            text.append(i).append(System.lineSeparator());
+        }
+        return text.toString();
+    }
+
+    /**
+     * Get the number of lines
+     * @return Number of lines
+     */
+    public int getNLines() {
+        return nLines;
+    }
+
+    /**
+     * Get the height of one line
+     * @return Line height (in px)
+     */
+    public int getLineHeight() {
+//        Logs.d(TAG, "", getPreferredSize().height, getNVisibleLines());
+//        return getPreferredSize().height / getNVisibleLines();
+        int bodyPaneH = getViewport().getView().getPreferredSize().height;
+//        Logs.d(TAG, "", bodyPaneH, mNumLines);
+        return bodyPaneH / nLines;
+    }
+
+    /**
+     * Get the number of visible lines
+     * @return Number of visible lines
+     */
+    public int getNLinesInside() {
+        return getHeight() / getLineHeight();
+//        return dim.height / getLineHeight();
+    }
+
+    /**
+     * Get the maximum value of the scroll bar
+     * @return Maximum scroll value
+     */
+    public int getMaxScrollVal() {
+        return getVerticalScrollBar().getMaximum();
+    }
+
+    /**
+     * Check if the Target is inside the frame
+     * @return 1: inside, 0: outside
+     */
+    public int isTargetInFrame() {
+        final int vtScrollVal = getVerticalScrollBar().getValue();
+        return targetMinMax.isWithin(vtScrollVal) ? 1 : 0;
+    }
+
+    /**
+     * Check if the target is visible (has entered the viewport)
+     * @param fully Check for fully visible (true) or partially (false)
+     * @return True/false
+     */
+    public boolean isTargetVisible(boolean fully) {
+        final int vtScrollVal = getVerticalScrollBar().getValue();
+
+        if (fully) {
+            return mTargetFullVisScVals.isWithin(vtScrollVal);
+        } else {
+            return mTargetPartVisScVals.isWithin(vtScrollVal);
+        }
+
+    }
+
+    /**
+     * Get a random line index
+     * NOTE: Indexes start from 1
+     * @return A random line index
+     */
+    private int randLineInd() {
+        // General min/max
+        int minInd = getNLinesInside(); // No highlight in the top window (if scrolled all the way up)
+        int maxInd = (getNLines() - 1) - getNLinesInside(); // No highlights in the bottom window
+
+        // Modif based on direction
+        if (activeTrial.direction == Direction.N) {
+            maxInd -= activeTrial.distance;
+        } else {
+            minInd += activeTrial.distance;
+        }
+
+        // Get a random line in between that is not blank
+        int lineInd;
+        do {
+            lineInd = Utils.randInt(minInd, maxInd);
+        } while (charCountInLines.get(lineInd) == 0);
+
+        return lineInd;
+    }
+
+
+    /**
+     * Get the number of Target appearances
+     * @return number of Target appearances
+     */
+    public int getNTargetAppear() {
+        return nTargetAppear;
     }
 
     /**
@@ -356,123 +487,6 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         conLog.info("Stop!");
         continueScrolling = false;
         velocity = 0;
-    }
-
-    /**
-     * Count the number of lines and chars in each line
-     * Line num = number of \n
-     */
-    public void countLines(String filePath) {
-        try {
-            String content = Files.readString(Path.of(filePath));
-            String[] lines = content.split("\n");
-            for (String line : lines) {
-                charCountInLines.add(line.length());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Get the line numbers to show
-     * @param nLines Number of lines
-     * @return String of line numbers
-     */
-    public String getLineNumbers(int nLines) {
-//        Logs.d(this.getClass().getName(), "Total lines = " + nLines);
-        StringBuilder text = new StringBuilder("0" + System.lineSeparator());
-        for(int i = 1; i < nLines + 1; i++){
-            text.append(i).append(System.lineSeparator());
-        }
-        return text.toString();
-    }
-
-    /**
-     * Get the number of lines
-     * @return Number of lines
-     */
-    public int getNLines() {
-        return mNumLines;
-    }
-
-    /**
-     * Get the height of one line
-     * @return Line height (in px)
-     */
-    public int getLineHeight() {
-//        Logs.d(TAG, "", getPreferredSize().height, getNVisibleLines());
-//        return getPreferredSize().height / getNVisibleLines();
-        int bodyPaneH = getViewport().getView().getPreferredSize().height;
-//        Logs.d(TAG, "", bodyPaneH, mNumLines);
-        return bodyPaneH / mNumLines;
-    }
-
-    /**
-     * Get the number of visible lines
-     * @return Number of visible lines
-     */
-    public int getNVisibleLines() {
-        return getHeight() / getLineHeight();
-//        return dim.height / getLineHeight();
-    }
-
-    /**
-     * Get the maximum value of the scroll bar
-     * @return Maximum scroll value
-     */
-    public int getMaxScrollVal() {
-        return getVerticalScrollBar().getMaximum();
-    }
-
-    /**
-     * Check if the Target is inside the frame
-     * @return 1: inside, 0: outside
-     */
-    public int isTargetInFrame() {
-        final int vtScrollVal = getVerticalScrollBar().getValue();
-        return targetMinMax.isWithin(vtScrollVal) ? 1 : 0;
-    }
-
-    /**
-     * Check if the target is visible (has entered the viewport)
-     * @param fully Check for fully visible (true) or partially (false)
-     * @return True/false
-     */
-    public boolean isTargetVisible(boolean fully) {
-        final int vtScrollVal = getVerticalScrollBar().getValue();
-
-        if (fully) {
-            return mTargetFullVisScVals.isWithin(vtScrollVal);
-        } else {
-            return mTargetPartVisScVals.isWithin(vtScrollVal);
-        }
-
-    }
-
-    /**
-     * Get a random line between the two values
-     * @param min Min line index (inclusive)
-     * @param max Max line index (exclusive)
-     * @return Line number
-     */
-    public int getRandLine(int min, int max) {
-
-        int lineInd = 0;
-        do {
-            lineInd = Utils.randInt(min, max);
-        } while (charCountInLines.get(lineInd) == 0);
-
-        return lineInd;
-    }
-
-
-    /**
-     * Get the number of Target appearances
-     * @return number of Target appearances
-     */
-    public int getNTargetAppear() {
-        return nTargetAppear;
     }
 
     // MouseListener ========================================================================================
@@ -531,15 +545,15 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         // Is it related to Moose?
-        if (STRINGS.equals(evt.getPropertyName(), STRINGS.MOOSE) && (evt.getNewValue() != null)) {
+        if (STR.equals(evt.getPropertyName(), STR.MOOSE) && (evt.getNewValue() != null)) {
             Memo memo = (Memo) evt.getNewValue();
             conLog.info("Memo: {}", memo);
-            if (memo.isAction(STRINGS.SCROLL)) {
-                if (memo.isMode(STRINGS.DISPLACE)) scroll(memo.getV2Int());
-                if (memo.isMode(STRINGS.STOP)) stopScroll();
+            if (memo.isAction(STR.SCROLL)) {
+                if (memo.isMode(STR.DISPLACE)) scroll(memo.getV2Int());
+                if (memo.isMode(STR.STOP)) stopScroll();
             }
 
-            if (memo.isAction(STRINGS.FLING)) {
+            if (memo.isAction(STR.FLING)) {
                 continueScrolling = true;
                 fling(memo.getV2Float() * cnfgVelocityGain);
             }

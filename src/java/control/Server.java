@@ -4,7 +4,8 @@ import moose.Memo;
 import moose.Moose;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
-import tool.Constants.STRINGS;
+import tool.Constants;
+import tool.Constants.STR;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -120,14 +121,14 @@ public class Server {
                         Memo memo = Memo.valueOf(message);
 
                         switch (memo.getAction()) {
-                            case STRINGS.CLICK, STRINGS.SCROLL, STRINGS.ZOOM,
-                                 STRINGS.GRAB, STRINGS.REL, STRINGS.PAN, STRINGS.FLING -> {
+                            case STR.CLICK, STR.SCROLL, Constants.STR.ZOOM,
+                                 STR.GRAB, Constants.STR.REL, Constants.STR.PAN, STR.FLING -> {
 //                                moose.processMooseEvent(memo);
-                                support.firePropertyChange(STRINGS.MOOSE, null, memo);
+                                support.firePropertyChange(STR.MOOSE, null, memo);
                             }
 
-                            case STRINGS.CONNECTION -> {
-                                if (memo.getMode().equals(STRINGS.KEEP_ALIVE)) {
+                            case Constants.STR.CONNECTION -> {
+                                if (memo.getMode().equals(STR.KEEP_ALIVE)) {
                                     // Send back the message (as confirmation)
                                     send(memo);
                                 }
@@ -162,7 +163,7 @@ public class Server {
     public void shutDown() {
         try {
             // Send end message to the Moose
-            send(new Memo(STRINGS.CONNECTION, STRINGS.END, ""));
+            send(new Memo(STR.CONNECTION, STR.END, ""));
 
             // Close the socket, etc.
             if (serverSocket != null && openSocket != null) {

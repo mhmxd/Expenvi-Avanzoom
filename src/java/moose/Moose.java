@@ -42,41 +42,41 @@ public class Moose {
         conLog.info("N. listeners = {}", nL);
         if (listeners.length > 0) {
             switch (mem.getAction()) {
-                case STRINGS.CLICK -> {
+                case STR.CLICK -> {
                     for (MooseListener l : listeners) {
                         l.mooseClicked(mem);
                     }
                 }
-                case STRINGS.SCROLL -> {
+                case STR.SCROLL -> {
                     for (MooseListener l : listeners) {
                         l.mooseScrolled(mem);
                     }
                 }
-                case STRINGS.GRAB -> {
+                case STR.GRAB -> {
                     conLog.info("Grabbed");
                     for (MooseListener l : listeners) {
                         l.mooseGrabbed(mem);
                     }
                 }
-                case STRINGS.REL -> {
+                case STR.REL -> {
                     conLog.info("Released");
                     for (MooseListener l : listeners) {
                         l.mooseReleased(mem);
                     }
                 }
-                case STRINGS.PAN -> {
+                case STR.PAN -> {
                     for (MooseListener l : listeners) {
                         l.moosePanned(mem);
                     }
                 }
-                case STRINGS.ZOOM -> {
+                case STR.ZOOM -> {
                     switch (mem.getMode()) {
-                        case STRINGS.ZOOM -> {
+                        case STR.ZOOM -> {
                             for (MooseListener l : listeners) {
                                 l.mooseWheelMoved(mem);
                             }
                         }
-//                        case STRINGS.ZOOM_START -> {
+//                        case STR.ZOOM_START -> {
 //                            for (MooseListener l : listeners) {
 //                                l.mooseZoomStart(mem);
 //                            }

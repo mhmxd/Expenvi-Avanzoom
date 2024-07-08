@@ -74,40 +74,18 @@ public class Constants {
 
 
     //-- Strings
-    public static class STRINGS {
-        public final static String LD = ";";
-        public final static String MSP = "&";
-        public static final String INTRO = "INTRO";
-        public static final String MOOSE = "MOOSE";
-        public final static String TECH = "TECH";
-        public final static String CONFIG = "CONFIG";
-        public final static String CONNECTION = "CONNECTION";
-        public final static String LOG = "LOG";
-        public final static String EXP_ID = "EXPID"; // Id for an experiment
-        public final static String GENLOG = "GENLOG";
-        public final static String BLOCK = "BLOCK";
-        public final static String TRIAL = "TRIAL";
-        public final static String TSK = "TASK"; // TSK to not confuse with TASK
-        public final static String END = "END";
-        public final static String P_INIT = "P";
+    public static class STR {
+        public static final String MOOSE = "moose";
+        public final static String CONNECTION = "connection";
+        public final static String END = "end";
 
-        public static final String SP = ",";
-        public static final String SINGLE = "SINGLE";
+        public static final String MEMO_SP = ";";
 
-        public static final String CLICK = "CLICK";
+        public static final String CLICK = "click";
+        public static final String SCROLL = "scroll";
+        public static final String DISPLACE = "displace";
 
-        public static final String SCROLL = "SCROLL";
-        public static final String DISPLACE = "DISPLACE";
-
-        public static final String ZOOM = "ZOOM";
-        public static final String PAN = "PAN";
-        public static final String GRAB = "GRAB";
-        public static final String REL = "REL";
-        public static final String STOP = "STOP";
-        public static final String VEL = "VEL";
-        public static final String ZOOM_START = "ZOOM_START";
-
-        public static final String KEEP_ALIVE = "KEEP_ALIVE";
+        public static final String KEEP_ALIVE = "keep_alive";
 
         public final static String DEMO_TITLE = "Welcome to the scrolling experiment!";
         public final static String DEMO_NEXT = "First, let's have a demo >";
@@ -124,10 +102,19 @@ public class Constants {
         public final static String END_EXPERIMENT_MESSAGE =
                 "All finished! Thank you for participating in this experiment!";
 
-        public final static String PID = "PID";
-        public final static String TASK = "TASK";
-        public final static String TECHNIQUE = "TECHNIQUE";
-        public static final String FLING = "FLING";
+        public static final String PANZOOM = "panzoom";
+
+        public final static String PID = "pid";
+        public final static String TASK = "task";
+        public final static String TECHNIQUE = "technique";
+        public static final String FLING = "fling";
+
+        public static final String ZOOM = "zoom";
+        public static final String PAN = "pan";
+        public static final String GRAB = "grab";
+        public static final String REL = "rel";
+        public static final String STOP = "stop";
+        public static final String VEL = "vel";
 
         public static final String WHEEL_NOTCH = "wheel.notch";
 
@@ -137,10 +124,16 @@ public class Constants {
         public static final String VELOCITY = "velocity";
         public static final String MIN = "min";
 
-        public static final String NUM_BLOCKS = "num.blocks";
+        public static final String NUM = "num";
+        public static final String BLOCKS = "blocks";
+
         public static final String DISTANCES = "distances";
         public static final String DIRECTIONS = "directions";
-        public static final String INDICATOR_SIZES = "indicator.sizes";
+        public static final String INDICATOR = "indicator";
+        public static final String TOLERANCES = "tolerances";
+
+        public static final String WIDTH = "width";
+
 
 //        public static String chain(String... args) {
 //            StringBuilder sb = new StringBuilder();

@@ -9,7 +9,7 @@ import enums.TaskType;
 import enums.Technique;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
-import tool.Constants.STRINGS;
+import tool.Constants.STR;
 
 import javax.swing.*;
 import java.awt.*;
@@ -90,9 +90,9 @@ public class InfoPanel extends JPanel {
         okButton.addActionListener(e -> {
 
             // Set the values and call the action
-            okAction.putValue(STRINGS.PID, pIdTextField.getText());
-            okAction.putValue(STRINGS.TASK, taskComboBox.getSelectedItem());
-            okAction.putValue(STRINGS.TECHNIQUE, techniqueComboBox.getSelectedItem());
+            okAction.putValue(STR.PID, pIdTextField.getText());
+            okAction.putValue(STR.TASK, taskComboBox.getSelectedItem());
+            okAction.putValue(STR.TECHNIQUE, techniqueComboBox.getSelectedItem());
             okAction.actionPerformed(e);
 //            JFrame frame;
 //

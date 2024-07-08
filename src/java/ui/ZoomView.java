@@ -142,7 +142,7 @@ public class ZoomView extends JPanel
         Server.get().addPropertyChangeListener(this);
 
         // Get configs
-//        ZOOM_GAIN = ExpFrame.config.getInt(STRINGS.ZOOM_GAIN);
+//        ZOOM_GAIN = ExpFrame.config.getInt(STR.ZOOM_GAIN);
 
     }
 
@@ -154,9 +154,9 @@ public class ZoomView extends JPanel
 
         URI zURI = null;
         if (taskType == TaskType.ZOOM_IN) {
-            zURI = Resources.SVG.ZOOM_IN_URI;
+            zURI = Resources.ZOOM_IN_URI;
         } else if (taskType == TaskType.ZOOM_OUT) {
-            zURI = Resources.SVG.ZOOM_OUT_URI;
+            zURI = Resources.ZOOM_OUT_URI;
         }
 
         int rotation = 0;
@@ -164,7 +164,7 @@ public class ZoomView extends JPanel
         int startPosY = 0;
 
         zoomSVGIcon.setSvgURI(zURI);
-        SVGDiagram zoomSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.SVG.ZOOM_IN_URI);
+        SVGDiagram zoomSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.ZOOM_IN_URI);
         SVGRoot zoomSvgRoot = zoomSvgDiagram.getRoot();
 
         StringBuilder builder = new StringBuilder();
@@ -205,9 +205,9 @@ public class ZoomView extends JPanel
 //        }
 
 
-        thresholdSVGIcon.setSvgURI(Resources.SVG.THRESH_200_URI);
+        thresholdSVGIcon.setSvgURI(Resources.THRESH_200_URI);
 
-        SVGDiagram thresholdSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.SVG.THRESH_200_URI);
+        SVGDiagram thresholdSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.THRESH_200_URI);
         SVGRoot thresholdSvgRoot = thresholdSvgDiagram.getRoot();
 
         StringBuilder thresholdBuilder = new StringBuilder();
@@ -294,7 +294,7 @@ public class ZoomView extends JPanel
     }
 
     private void colorThreshold(String color) {
-        SVGDiagram thresholdSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.SVG.THRESH_URI);
+        SVGDiagram thresholdSvgDiagram = SVGCache.getSVGUniverse().getDiagram(Resources.THRESH_URI);
         SVGRoot thresholdSvgRoot = thresholdSvgDiagram.getRoot();
 
         List<SVGElement> children = new ArrayList<>();
@@ -533,15 +533,15 @@ public class ZoomView extends JPanel
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         // Is it relate to Moose?
-        if (STRINGS.equals(evt.getPropertyName(), STRINGS.MOOSE)) {
+        if (STR.equals(evt.getPropertyName(), STR.MOOSE)) {
             if (evt.getNewValue() != null) {
                 Memo memo = (Memo) evt.getNewValue();
 
                 switch (memo.getAction()) {
 
-                    case STRINGS.REL -> release();
+                    case STR.REL -> release();
 
-                    case STRINGS.ZOOM -> {
+                    case STR.ZOOM -> {
                         zoom(memo.getV1Int() * ZOOM_GAIN);
                     }
                 }
