@@ -43,12 +43,12 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     private final Color COLOR_LINE_HIGHLIGHT = COLORS.BLUE;
     private final Color COLOR_INDICATOR = COLORS.DARK_GREEN;
 
-    private final int WRAP_CHARS_COUNT = 70;
+    private final int WRAP_CHARS_COUNT = 66;
     private final float TEXT_FONT_SIZE = 20f;
     private final float TEXT_LINE_SPACING = 0.193f;
 
 //    private final int WRAP_CHARS_COUNT = 67;
-//    private final String WRAPPED_FILE_NAME = "./res/wrapped.txt";
+    private String wrappedFile = "";
 
 //    private final Dimension dim; // in px
     private ArrayList<Integer> charCountInLines = new ArrayList<>();
@@ -115,12 +115,13 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      */
     public VTScrollPane setText(String fileName, int textWidth, boolean reWrap) {
         final String resFilePath = fileName + ".txt";
-        final String wrappedFile = fileName + "-wrapped.txt";
+        wrappedFile = fileName + "-wrapped.txt";
+//        final String wrappedFile = fileName + "-wrapped.txt";
 
         try {
             if (reWrap) {
                 final File wFile = new File(wrappedFile);
-                charCountInLines = StringWrapper.wrapFile(
+                StringWrapper.wrapText(
                         Resources.TEXT.URI_LOREM,
                         wrappedFile,
                         WRAP_CHARS_COUNT);
@@ -251,7 +252,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         activeTrial = trial;
 
         // Highlight the line
-        highlight(randLineInd());
+        highlight(265);
+//        highlight(randLineInd());
     }
 
     /**
@@ -268,19 +270,23 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      */
     public void highlight(int targetLineInd) {
 
-        // Highlight line
         try {
-            int stIndex = 0;
-            for (int li = 0; li < targetLineInd; li++) {
-                stIndex += charCountInLines.get(li) + 1; // prev. lines + \n
-            }
-            int endIndex = stIndex + charCountInLines.get(targetLineInd); // highlight the whole line
-//            Logs.d(TAG, charCountInLines.size(), targetLineInd, indicSize, stIndex, endIndex);
+            int stIndex = (targetLineInd - 1) * (WRAP_CHARS_COUNT + 1);
+//            int endIndex = stIndex + charCountInLines.get(targetLineInd); // highlight the whole line
+            final String line = bodyTextPane.getText(stIndex, WRAP_CHARS_COUNT + 1);
+            conLog.info("Line: {}", line);
+            final int endPadLen = line.length() - line.trim().length();
+            conLog.info("nBlanks = {}", endPadLen);
+
+            int endIndex = stIndex + WRAP_CHARS_COUNT + 1 - endPadLen;
+
             DefaultHighlighter.DefaultHighlightPainter highlighter =
                     new DefaultHighlighter
                     .DefaultHighlightPainter(COLOR_LINE_HIGHLIGHT);
             bodyTextPane.getHighlighter().removeAllHighlights();
-            bodyTextPane.getHighlighter().addHighlight(stIndex, endIndex, highlighter);
+            bodyTextPane.getHighlighter().addHighlight(stIndex, endIndex,
+                    highlighter);
+//            bodyTextPane.getHighlighter().addHighlight(stIndex, endIndex, highlighter);
 //            Logs.d(TAG, bodyTextPane.getText(stIndex, 10));
 
         } catch (BadLocationException e) {
@@ -345,7 +351,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      * @return Number of lines
      */
     public int getNLines() {
-        return nLines;
+        return StringWrapper.countLines(wrappedFile);
+//        return nLines;
     }
 
     /**
@@ -357,7 +364,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 //        return getPreferredSize().height / getNVisibleLines();
         int bodyPaneH = getViewport().getView().getPreferredSize().height;
 //        Logs.d(TAG, "", bodyPaneH, mNumLines);
-        return bodyPaneH / nLines;
+//        return bodyPaneH / nLines;
+        return bodyPaneH / StringWrapper.countLines(wrappedFile);
     }
 
     /**
@@ -411,7 +419,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         // General min/max
         int minInd = getNLinesInside(); // No highlight in the top window (if scrolled all the way up)
         int maxInd = (getNLines() - 1) - getNLinesInside(); // No highlights in the bottom window
-
+        conLog.info("MinInd = {}, MaxInd = {}", minInd, maxInd);
         // Modif based on direction
         if (activeTrial.direction == Direction.N) {
             maxInd -= activeTrial.distance;
@@ -421,9 +429,12 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 
         // Get a random line in between that is not blank
         int lineInd;
+//        do {
+//            lineInd = Utils.randInt(minInd, maxInd);
+//        } while (charCountInLines.get(lineInd) == 0);
         do {
             lineInd = Utils.randInt(minInd, maxInd);
-        } while (charCountInLines.get(lineInd) == 0);
+        } while (StringWrapper.getLine(wrappedFile, lineInd).isEmpty());
 
         return lineInd;
     }

@@ -85,7 +85,6 @@ public class PanZoomView extends JPanel
     private double cnfgPanFriction;
     private double cnfgFlingGain;
 
-
     //------------------------------------------------------------------
     private class PanTask implements Runnable {
         int velX, velY;

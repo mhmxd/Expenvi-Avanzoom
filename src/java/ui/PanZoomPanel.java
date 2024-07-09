@@ -170,6 +170,8 @@ public class PanZoomPanel
         final double panFriction = config.getDouble(panFrictionKey);
         keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
 
+
+
         // Set in the scrollPane
         panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction);
 
