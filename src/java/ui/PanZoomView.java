@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import static tool.Constants.*;
 
 public class PanZoomView extends JPanel
-        implements MouseListener, MouseMotionListener, MouseWheelListener, MooseListener, PropertyChangeListener {
+        implements MouseListener, MouseMotionListener, MouseWheelListener, PropertyChangeListener {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     // Keys
@@ -83,6 +83,7 @@ public class PanZoomView extends JPanel
     private double cnfgZoomWheelNotchGain;
     private double cnfgPanGain;
     private double cnfgPanFriction;
+    private double cnfgZoomGain;
     private double cnfgFlingGain;
 
     //------------------------------------------------------------------
@@ -146,10 +147,11 @@ public class PanZoomView extends JPanel
 
     }
 
-    public void setConfig(double zoomWheelNotchGain, double panGain, double panFriction) {
+    public void setConfig(double zoomWheelNotchGain, double panGain, double panFriction, double zoomGain) {
         cnfgZoomWheelNotchGain = zoomWheelNotchGain;
         cnfgPanGain = panGain;
         cnfgPanFriction = panFriction;
+        cnfgZoomGain = zoomGain;
 
         conLog.info("New config set!");
     }
@@ -694,35 +696,35 @@ public class PanZoomView extends JPanel
     }
 
     //===========================================================================
-    @Override
-    public void mooseClicked(Memo mem) {
+//    @Override
+//    public void mooseClicked(Memo mem) {
+//
+//    }
+//
+//    @Override
+//    public void mooseScrolled(Memo mem) {
+//
+//    }
+//
+//    @Override
+//    public void mooseWheelMoved(Memo mem) {
+//
+//    }
+//
+//    @Override
+//    public void moosePanned(Memo mem) {
+////        panDisplace(mem.getV1Float(), mem.getV1Float());
+//    }
 
-    }
-
-    @Override
-    public void mooseScrolled(Memo mem) {
-
-    }
-
-    @Override
-    public void mooseWheelMoved(Memo mem) {
-
-    }
-
-    @Override
-    public void moosePanned(Memo mem) {
-//        panDisplace(mem.getV1Float(), mem.getV1Float());
-    }
-
-    @Override
-    public void mooseGrabbed(Memo mem) {
-        grab(MouseInfo.getPointerInfo().getLocation());
-    }
-
-    @Override
-    public void mooseReleased(Memo mem) {
-        release();
-    }
+//    @Override
+//    public void mooseGrabbed(Memo mem) {
+//        grab(MouseInfo.getPointerInfo().getLocation());
+//    }
+//
+//    @Override
+//    public void mooseReleased(Memo mem) {
+//        release();
+//    }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
@@ -760,7 +762,7 @@ public class PanZoomView extends JPanel
                     }
 
                     case STR.ZOOM -> {
-                        setZoomLevel(memo.getV1Int());
+                        zoom(memo.getV1Int() * cnfgZoomGain);
                     }
                 }
             }

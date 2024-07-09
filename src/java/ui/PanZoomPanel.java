@@ -65,7 +65,7 @@ public class PanZoomPanel
 //    ZoomView zoomView;
 //    VTScrollPane scrollPane;
 //    private ZoomViewport zoomViewPort;
-    private final ArrayList<MoCoord> zoomElements = new ArrayList<>(); // Hold the grid coords + ids
+//    private final ArrayList<MoCoord> zoomElements = new ArrayList<>(); // Hold the grid coords + ids
 
     // Sound
 
@@ -158,22 +158,24 @@ public class PanZoomPanel
 
         List<String> keyValues = new ArrayList<>();
 
-        final String zoomNotchGainKey = String.join(".", STR.ZOOM, STR.WHEEL_NOTCH, STR.GAIN);
-        final double zoomWheelNotchGain = config.getDouble(zoomNotchGainKey);
-        keyValues.add(zoomNotchGainKey + " = " + String.format("%.2f", zoomWheelNotchGain));
+        String key = String.join(".", STR.ZOOM, STR.WHEEL_NOTCH, STR.GAIN);
+        final double zoomWheelNotchGain = config.getDouble(key);
+        keyValues.add(key + " = " + String.format("%.2f", zoomWheelNotchGain));
 
-        final String panGainKey = String.join(".", STR.PAN, STR.GAIN);
-        final double panGain = config.getDouble(panGainKey);
-        keyValues.add(panGainKey + " = " + String.format("%.2f", panGain));
+        key = String.join(".", STR.PAN, STR.GAIN);
+        final double panGain = config.getDouble(key);
+        keyValues.add(key + " = " + String.format("%.2f", panGain));
 
-        final String panFrictionKey = String.join(".", STR.PAN, STR.FRICTION);
-        final double panFriction = config.getDouble(panFrictionKey);
-        keyValues.add(panFrictionKey + " = " + String.format("%.2f", panFriction));
+        key = String.join(".", STR.PAN, STR.FRICTION);
+        final double panFriction = config.getDouble(key);
+        keyValues.add(key + " = " + String.format("%.2f", panFriction));
 
-
+        key = String.join(".", STR.ZOOM, STR.GAIN);
+        final double zoomGain = config.getDouble(key);
+        keyValues.add(key + " = " + String.format("%.2f", panFriction));
 
         // Set in the scrollPane
-        panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction);
+        panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction, zoomGain);
 
         // Show config in the label
         configLabel.setText(String.join(" | ", keyValues));

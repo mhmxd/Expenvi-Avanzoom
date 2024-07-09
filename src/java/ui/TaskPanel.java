@@ -43,6 +43,7 @@ public class TaskPanel extends JLayeredPane {
     JLabel endTaskLabel = new JLabel();
     JButton configButton = new JButton();
     JLabel configLabel = new JLabel();
+    private final boolean isConfigVisible = true;
 
     // Consts
     final Dimension PRG_LBL_DIM = new MoDimension(200, 30);
@@ -153,8 +154,12 @@ public class TaskPanel extends JLayeredPane {
         }
 
         add(progressLabel, JLayeredPane.DEFAULT_LAYER);
-        add(configButton, JLayeredPane.DEFAULT_LAYER);
-        add(configLabel, JLayeredPane.DEFAULT_LAYER);
+
+        // Show config button+label only if flag is set
+        if (isConfigVisible) {
+            add(configButton, JLayeredPane.DEFAULT_LAYER);
+            add(configLabel, JLayeredPane.DEFAULT_LAYER);
+        }
 
         // Implemented by the subclasses...
     }

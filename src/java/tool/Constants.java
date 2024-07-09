@@ -46,8 +46,8 @@ public class Constants {
 
     //-- Display properties
     public static class DISP {
-        public final static int PPI = 109; // Apple Display
-//        public final static int PPI = 90; // BenQ
+//        public final static int PPI = 109; // Apple Display
+        public final static int PPI = 90; // BenQ
 //        public final static int PPI = 127; // MacBook Pro
 
         private final static double hPPIScale = 1.01; // Height DPI is slightly larger
