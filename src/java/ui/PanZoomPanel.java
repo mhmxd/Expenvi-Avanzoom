@@ -111,19 +111,6 @@ public class PanZoomPanel
                     COLORS.FLAX);
         }
 
-
-        // Add the elements to the list (done once)
-//        for (int r = 0; r < N_ELEMENTS; r++) {
-//            for (int c = 0; c < N_ELEMENTS; c++) {
-//                zoomElements.add(new MoCoord(r, c, String.format("r%d_c%d", r, c)));
-//            }
-//        }
-
-//        addMouseListener(this);
-//        addMouseMotionListener(this);
-//        addMouseWheelListener(this);
-//        moose.addMooseListener(this);
-
         getInputMap().put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0),
                 "Space");
@@ -166,16 +153,22 @@ public class PanZoomPanel
         final double panGain = config.getDouble(key);
         keyValues.add(key + " = " + String.format("%.2f", panGain));
 
-        key = String.join(".", STR.PAN, STR.FRICTION);
-        final double panFriction = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", panFriction));
-
         key = String.join(".", STR.ZOOM, STR.GAIN);
         final double zoomGain = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", panFriction));
+        keyValues.add(key + " = " + String.format("%.2f", zoomGain));
 
-        // Set in the scrollPane
-        panZoomView.setConfig(zoomWheelNotchGain, panGain, panFriction, zoomGain);
+        key = String.join(".", STR.FLING, STR.VELOCITY, STR.GAIN);
+        final double flingVelGain = config.getDouble(key);
+        keyValues.add(key + " = " + String.format("%.2f", flingVelGain));
+
+        key = String.join(".", STR.FLING, STR.VELOCITY, STR.FRICTION);
+        final double flingVelFriction = config.getDouble(key);
+        keyValues.add(key + " = " + String.format("%.2f", flingVelFriction));
+
+        // Set the config in the view
+        panZoomView.setPanConfig(panGain);
+        panZoomView.setZoomConfig(zoomWheelNotchGain, zoomGain);
+        panZoomView.setFlingConfig(flingVelGain, flingVelFriction);
 
         // Show config in the label
         configLabel.setText(String.join(" | ", keyValues));
@@ -217,24 +210,29 @@ public class PanZoomPanel
      */
     @Override
     protected void showActiveTrial() {
+        requestFocusInWindow();
+        conLog.info("----------------------------------");
+        final Component[] comps = getComponentsInLayer(JLayeredPane.PALETTE_LAYER);
+        for (Component c : comps) {
+            remove(c);
+        }
 
-        // Update prgogressLabel (trial/block)
-//        progressLabel.setText("Trial: " + activeTrial.trialNum + " – " + "Block: " + activeTrial.blockNum);
-//        progressLabel.setVisible(true);
-
-        // Create the viewport for showing the trial
         panZoomView = new PanZoomView((PanZoomTrial) activeTrial);
-//                panZoomView.setBounds(
-//                        (getWidth() - vpSize)/2, (getHeight() - vpSize)/2,
-//                        vpSize, vpSize);
-//                panZoomView.setBounds(0, 0, getWidth(), getHeight());
         panZoomView.setBounds(
                 (getWidth() - viewportDim.width) / 2, (getHeight() - viewportDim.height)/2,
                 viewportDim.width, viewportDim.height);
-//                panZoomView.setDim(VIEWPORT_SIZE);
-//                panZoomView.setPos(new MoPoint( (getWidth() - VIEWPORT_SIZE)/2, (getHeight() - VIEWPORT_SIZE)/2));
-        panZoomView.setVisible(true);
-        add(panZoomView, JLayeredPane.DEFAULT_LAYER);
+
+
+        SwingUtilities.invokeLater(() -> {
+            add(panZoomView, JLayeredPane.PALETTE_LAYER);
+            panZoomView.setVisible(true);
+
+        });
+
+
+        // Update prgogressLabel (trial/block)
+        progressLabel.setText("Trial: " + activeTrial.trialNum + " – " + "Block: " + activeTrial.blockNum);
+        progressLabel.setVisible(true);
 
         // Load config
         loadConfig();
@@ -321,37 +319,4 @@ public class PanZoomPanel
         // TODO Show error if not over the ViewPort
         conLog.info("Wheeling...");
     }
-
-    // Moose --------------------------------------------------------------------------------------
-//    @Override
-//    public void mooseClicked(Memo mem) {
-//        Logex.get().logError(ErrorEvent.CLICK, ErrorEvent.OUTSIDE_ZVP);
-//        // TODO Show error (no Moose clicking)
-//    }
-//
-//    @Override
-//    public void mooseScrolled(Memo mem) {
-//
-//    }
-//
-//    @Override
-//    public void mooseWheelMoved(Memo mem) {
-//        Logex.get().logError(ErrorEvent.CLICK, ErrorEvent.OUTSIDE_ZVP);
-//        // TODO Show error if not over ViewPort
-//    }
-//
-//    @Override
-//    public void moosePanned(Memo mem) {
-//
-//    }
-//
-//    @Override
-//    public void mooseGrabbed(Memo mem) {
-//
-//    }
-//
-//    @Override
-//    public void mooseReleased(Memo mem) {
-//
-//    }
 }

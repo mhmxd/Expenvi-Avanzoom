@@ -1,5 +1,6 @@
 package tool;
 
+import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -46,11 +47,12 @@ public class Constants {
 
     //-- Display properties
     public static class DISP {
-//        public final static int PPI = 109; // Apple Display
-        public final static int PPI = 90; // BenQ
+        public final static int PPI = 109; // Apple Display
+//        public final static int PPI = 90; // BenQ
 //        public final static int PPI = 127; // MacBook Pro
 
-        private final static double hPPIScale = 1.01; // Height DPI is slightly larger
+//        private final static double hPPIScale = 1.01; // BenQ: Height DPI is slightly larger
+        private final static double hPPIScale = 1.005; // Apple Display
 
         public final static double INCH_MM = 25.4;
         public final static double LR_MARGIN_mm = 20; // (mm) Left-right margin
@@ -72,6 +74,22 @@ public class Constants {
                 ATTRIB_ITALIC = Collections.singletonMap(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE);
     }
 
+    public static class CURSORS {
+        public static Cursor RESIZE_NS, RESIZE_EW, DEFAULT;
+
+        static {
+            RESIZE_NS = Toolkit.getDefaultToolkit().createCustomCursor(
+                    new ImageIcon("./Resize_NS_12.png").getImage(),
+                    new Point(8,10),
+                    "Resize_NS");
+            RESIZE_EW = Toolkit.getDefaultToolkit().createCustomCursor(
+                    new ImageIcon("./Resize_EW.png").getImage(),
+                    new Point(15,8),
+                    "Resize_NS");
+
+            DEFAULT = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+        }
+    }
 
     //-- Strings
     public static class STR {

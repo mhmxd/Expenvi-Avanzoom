@@ -51,7 +51,7 @@ public class MoPlane extends JPanel {
 
         destMaxZoomSq = svg.getZoomArea(roomNum, "min");
         maxZoomSqRatio = destMaxZoomSq.width / (double) svgOriginalDim.width;
-        conLog.info("Max ratio = {}; Min Ratio: {}", maxZoomSqRatio, minZoomSqRatio);
+        conLog.trace("Max ratio = {}; Min Ratio: {}", maxZoomSqRatio, minZoomSqRatio);
 
         // Add circles
 //        conLog.trace("Room {} Min Area = {}", trial.roomNum, roomMinArea);

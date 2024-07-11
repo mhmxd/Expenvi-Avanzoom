@@ -6,9 +6,13 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class Sounder {
     private static Clip errorClip, hitClip, missClip, taskEndClip;
+
+    private static final ScheduledExecutorService player = Executors.newSingleThreadScheduledExecutor();
 
     static {
         try {
@@ -40,13 +44,23 @@ public class Sounder {
     }
 
     public static void playHit() {
-        hitClip.setMicrosecondPosition(0); // Reset to the start of the file
-        hitClip.start();
+//        hitClip.setMicrosecondPosition(0); // Reset to the start of the file
+//        hitClip.start();
+
+        player.execute(() -> {
+            hitClip.setMicrosecondPosition(1); // Reset to the start of the file
+            hitClip.start();
+        });
     }
 
     public static void playMiss() {
-        missClip.setMicrosecondPosition(0); // Reset to the start of the file
-        missClip.start();
+//        missClip.setMicrosecondPosition(0); // Reset to the start of the file
+//        missClip.start();
+
+        player.execute(() -> {
+            missClip.setMicrosecondPosition(1); // Reset to the start of the file
+            missClip.start();
+        });
     }
 
     public static void playTaskEnd() {

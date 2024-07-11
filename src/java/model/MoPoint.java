@@ -5,7 +5,8 @@ import java.awt.*;
 public class MoPoint extends Point {
 
     public MoPoint() {
-
+        x = 0;
+        y = 0;
     }
 
     public MoPoint(Point p) {
