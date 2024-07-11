@@ -1,24 +1,19 @@
 package ui;
 
 import control.Server;
-import listener.MooseListener;
 import model.MoPlane;
 import model.MoPoint;
 import model.PanZoomTrial;
 import moose.Memo;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
+import tool.MoDimension;
 import tool.MoRect;
 import tool.Resources;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.concurrent.Executors;
@@ -42,8 +37,8 @@ public class PanZoomView extends JPanel
     private final PanZoomTrial trial;
 
     // Toggles
-    private final boolean isLimitingPan = false;
-    private final boolean isLimitingZoom = false;
+    private final boolean isLimitingPan = true;
+//    private final boolean isLimitingZoom = true;
 
     // View
     private MoPlane activePlane;
@@ -137,13 +132,14 @@ public class PanZoomView extends JPanel
         setBorder(BORDERS.BLACK_BORDER);
 
         // Create planes (w/ this as initial dimension)
-        plainPlane = new MoPlane(Resources.SVG_PLAN_URI);
+        plainPlane = new MoPlane(Resources.PLAIN_PLAN_URI);
         plainPlane.setBounds(initPlanePose, getSize());
 
-        trialPlane = new MoPlane(Resources.SVG_PLAN_URI);
+        trialPlane = new MoPlane(Resources.TRIAL_PLAN_URI);
+        final MoDimension testDim = new MoDimension(getSize(), -400);
         trialPlane.setBounds(initPlanePose, getSize());
+//        conLog.info("Room: {}", trial.roomNum);
         trialPlane.setTrialParts(trial.roomNum, 30);
-        conLog.info("Position: {}", planePos);
 
         setZoomLevel(trial.initZoomLvl);
 
@@ -158,7 +154,7 @@ public class PanZoomView extends JPanel
     protected void paintComponent(Graphics g) {
         conLog.trace("Trial Running: {}, Plane position: {}", isTrialRunning, planePos);
         super.paintComponent(g);
-
+        conLog.info("Zoom Lvl: {}", zoomLvl);
         if (zoomLvl > ExpFrame.ZOOM_OUT_INFO_THRESHOLD) {
             activePlane = trialPlane;
         } else {
@@ -185,22 +181,22 @@ public class PanZoomView extends JPanel
         int xDiff = curPoint.x - dragPoint.x;
         int yDiff = curPoint.y - dragPoint.y;
 
-//        if (isLimitingPan) {
-//            // Plane shouldn't go outside more than its size
-//            final MoPoint posToCheck = MoPoint.copyTranslated(planePos, xDiff, yDiff);
-//            if (posToCheck.isXInClosed(-(planeDim.width - getWidth()), 0)) {
-//                dragPoint = curPoint;
-//
-//                planePos.translate(xDiff, yDiff);
-////                padPos.translate(xDiff, yDiff);
-//
+        if (isLimitingPan) {
+            // Plane shouldn't go outside more than its size
+            final MoPoint posToCheck = MoPoint.copyTranslated(planePos, xDiff, yDiff);
+            if (posToCheck.isXInClosed(-(activePlane.getWidth() - getWidth()), 0)) {
+                dragPoint = curPoint;
+
+                planePos.translate(xDiff, yDiff);
+//                padPos.translate(xDiff, yDiff);
+
 //                conLog.info("Dim = {}", planeDim);
-//                conLog.info("ZoomLvl = {}", zoomLvl);
-//                conLog.info("Plane Pos = {}", planePos);
-//
-//                repaint();
-//            }
-//        }
+                conLog.info("ZoomLvl = {}", zoomLvl);
+                conLog.info("Plane Pos = {}", planePos);
+
+                repaint();
+            }
+        }
 
         dragPoint = curPoint;
 
@@ -260,8 +256,6 @@ public class PanZoomView extends JPanel
         double prcnt = -dZ/100.0;
         focalZoomPercent(relPoint, prcnt);
         conLog.info("Prcnt = {}", prcnt);
-
-
     }
 
     public void setZoomLevel(double newZoomLvl) {
@@ -351,7 +345,6 @@ public class PanZoomView extends JPanel
     public void mousePressed(MouseEvent e) {
         // Wheel press: button=2,modifiers=⌥+Button2,extModifiers=Button2
         if (e.getButton() == 2 || e.getButton() == 3) {
-            conLog.warn("Pressed");
             grab(e.getLocationOnScreen());
         }
     }

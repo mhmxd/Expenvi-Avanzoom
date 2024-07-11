@@ -10,6 +10,8 @@ import org.tinylog.TaggedLogger;
 import tool.MoRect;
 
 import java.awt.*;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 
 import static tool.Constants.*;
@@ -34,7 +36,7 @@ public class MoSVG extends SVGIcon {
         int startPosX = 0;
         int startPosY = 0;
 
-        final SVGUniverse uni = SVGCache.getSVGUniverse();
+        final SVGUniverse uni = new SVGUniverse();
         uni.clear();
         svgDiagram = uni.getDiagram(svgURI);
 //        svgDiagram = svgUni.getDiagram(svgURI);
@@ -146,7 +148,7 @@ public class MoSVG extends SVGIcon {
         conLog.trace("Room Num = {}", roomNum);
         Group root = svgDiagram.getRoot();
         SVGElement element = root.getChild("r" + roomNum);
-        conLog.trace("n = {}, Element: {}", root.getNumChildren(), element);
+        conLog.trace ("n = {}, Element: {}", root.getNumChildren(), element);
         try {
             if (element != null) {
                 element.setAttribute("fill", AnimationElement.AT_XML, COLORS.getHex(color));
@@ -155,6 +157,7 @@ public class MoSVG extends SVGIcon {
         } catch (SVGException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     public void paintCirclesInRoom(int roomNum, Color color) {

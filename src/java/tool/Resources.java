@@ -17,7 +17,9 @@ public class Resources {
     public static URI PAN_LVL2_URI = URI.create("");
     public static URI PAN_LVL3_URI = URI.create("");
 
-    public static URI SVG_PLAN_URI = URI.create("");
+    public static URI PLAIN_PLAN_URI = URI.create("");
+    public static URI TRIAL_PLAN_URI = URI.create("");
+
     public static URI THRESH_URI = URI.create("");
     public static URI THRESH_200_URI = URI.create("");
 
@@ -30,7 +32,8 @@ public class Resources {
     static {
         try {
             // Load the SVG resources
-            SVG_PLAN_URI = Objects.requireNonNull(Resources.class.getResource("/plan4.svg")).toURI();
+            PLAIN_PLAN_URI = Objects.requireNonNull(Resources.class.getResource("/plain_plan.svg")).toURI();
+            TRIAL_PLAN_URI = Objects.requireNonNull(Resources.class.getResource("/trial_plan.svg")).toURI();
 
             THRESH_URI = Objects.requireNonNull(Resources.class.getResource("/threshold.svg")).toURI();
             THRESH_200_URI = Objects.requireNonNull(Resources.class.getResource("/threshold200.svg")).toURI();
