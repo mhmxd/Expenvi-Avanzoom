@@ -2,22 +2,20 @@ package model;
 
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
-import tool.MoDimension;
 import tool.MoRect;
-import ui.ExpFrame;
 
-import javax.swing.*;
 import java.awt.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class MoPlane extends JPanel {
+public class MoPlane extends MoRect {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
-    private final MoSVG svg;
-    private final MoDimension svgOriginalDim;
+//    private final MoSVG svg;
+//    private URI uri;
+//    private final MoDimension svgOriginalDim;
 
     private MoRect destMinZoomSq = new MoRect();
     private double minZoomSqRatio;
@@ -25,32 +23,37 @@ public class MoPlane extends JPanel {
     private MoRect destMaxZoomSq = new MoRect();
     private double maxZoomSqRatio;
 
-    private int roomNum;
+    private int destRoomNum;
 
-    public MoPlane(URI svgURI) {
+    public MoPlane() {
+//        uri = svgURI;
 //        this.pos = pos;
 //        this.dim = dim;
 
         // Set svg
-        svg = new MoSVG();
-        svg.setup(svgURI);
-        svgOriginalDim = new MoDimension(svg.getIconWidth(), svg.getIconHeight());
+//        svg = new MoSVG();
+//        svg.setup(svgURI);
+//        svgOriginalDim = new MoDimension(svg.getIconWidth(), svg.getIconHeight());
     }
 
     public void setBounds(Point pos, Dimension dim) {
         super.setBounds(pos.x, pos.y, dim.width, dim.height);
-        svg.setSize(dim);
+//        svg.setSize(dim);
+    }
+
+    public void setDestRoomNum(int destRoomNum) {
+        this.destRoomNum = destRoomNum;
     }
 
     public void setTrialParts(int roomNum, int minCircleRad) {
-        this.roomNum = roomNum;
+        this.destRoomNum = roomNum;
 
         // Positions are relative to the *plane*
-        destMinZoomSq = svg.getZoomArea(roomNum, "max");
-        minZoomSqRatio = destMinZoomSq.width / (double) svgOriginalDim.width;
-
-        destMaxZoomSq = svg.getZoomArea(roomNum, "min");
-        maxZoomSqRatio = destMaxZoomSq.width / (double) svgOriginalDim.width;
+//        destMinZoomSq = svg.getZoomArea(roomNum, "max");
+//        minZoomSqRatio = destMinZoomSq.width / (double) svgOriginalDim.width;
+//
+//        destMaxZoomSq = svg.getZoomArea(roomNum, "min");
+//        maxZoomSqRatio = destMaxZoomSq.width / (double) svgOriginalDim.width;
         conLog.trace("Max ratio = {}; Min Ratio: {}", maxZoomSqRatio, minZoomSqRatio);
 
         // Add circles
@@ -59,12 +62,12 @@ public class MoPlane extends JPanel {
                 destMaxZoomSq.width,
                 destMaxZoomSq.x,
                 destMaxZoomSq.y, minCircleRad);
-        for (MoCircle c : cList) {
-            svg.addCircle(c.radius, new Point(c.cx, c.cy), ExpFrame.HIGHLIGHT_COLOR);
-        }
+//        for (MoCircle c : cList) {
+//            svg.addCircle(c.radius, new Point(c.cx, c.cy), ExpFrame.HIGHLIGHT_COLOR);
+//        }
 
         // Paint room walls :)
-        svg.paintRoom(roomNum, ExpFrame.HIGHLIGHT_COLOR);
+//        svg.paintRoom(roomNum, ExpFrame.HIGHLIGHT_COLOR);
     }
 
     public static List<MoCircle> generateCircles(int W, int Xs, int Ys, int minR) {
@@ -126,30 +129,30 @@ public class MoPlane extends JPanel {
         final int newWidth = (int) (getWidth() * (1 + scale));
         final int newHeight = (int) (getHeight() * (1 + scale));
 
-        setBounds(getX(), getY(), newWidth, newHeight);
-        svg.setSize(getSize());
+        setBounds(x, y, newWidth, newHeight);
+//        svg.setSize(getSize());
     }
 
-    public void paint(Component comp, Graphics gg, Point pos) {
-        svg.paint(comp, gg, pos);
-    }
+//    public void paint(Component comp, Graphics gg, Point pos) {
+//        svg.paint(comp, gg, pos);
+//    }
 
-    public MoRect getDestMaxZoomSq() {
-        destMaxZoomSq.setSize((int) (getWidth() * maxZoomSqRatio));
-        final double scale = getWidth() / (double) svgOriginalDim.width;
-        destMaxZoomSq.x = (int) (scale * destMaxZoomSq.x); // Here from (0,0)
-        destMaxZoomSq.y = (int) (scale * destMaxZoomSq.y); // Here from (0,0)
-        return destMaxZoomSq;
-    }
-
-    public MoRect getDestMinZoomSq() {
-        destMinZoomSq.setSize((int) (getWidth() * minZoomSqRatio));
-        conLog.info("Min Zoom: {}", destMinZoomSq);
-        final double scale = getWidth() / (double) svgOriginalDim.width;
-        destMinZoomSq.x = (int) (scale * destMinZoomSq.x); // Here from (0,0)
-        destMinZoomSq.y = (int) (scale * destMinZoomSq.y); // Here from (0,0)
-
-        return destMinZoomSq;
-    }
+//    public MoRect getDestMaxZoomSq() {
+//        destMaxZoomSq.setSize((int) (getWidth() * maxZoomSqRatio));
+//        final double scale = getWidth() / (double) svgOriginalDim.width;
+//        destMaxZoomSq.x = (int) (scale * destMaxZoomSq.x); // Here from (0,0)
+//        destMaxZoomSq.y = (int) (scale * destMaxZoomSq.y); // Here from (0,0)
+//        return destMaxZoomSq;
+//    }
+//
+//    public MoRect getDestMinZoomSq() {
+//        destMinZoomSq.setSize((int) (getWidth() * minZoomSqRatio));
+//        conLog.info("Min Zoom: {}", destMinZoomSq);
+//        final double scale = getWidth() / (double) svgOriginalDim.width;
+//        destMinZoomSq.x = (int) (scale * destMinZoomSq.x); // Here from (0,0)
+//        destMinZoomSq.y = (int) (scale * destMinZoomSq.y); // Here from (0,0)
+//
+//        return destMinZoomSq;
+//    }
 
 }

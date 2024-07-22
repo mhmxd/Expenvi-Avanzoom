@@ -7,12 +7,17 @@ import com.kitfox.svg.app.beans.SVGPanel;
 import com.kitfox.svg.xml.StyleAttribute;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
+import tool.MoDimension;
 import tool.MoRect;
+import ui.ExpFrame;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static tool.Constants.*;
 
@@ -20,7 +25,16 @@ public class MoSVG extends SVGIcon {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
 
     private SVGDiagram svgDiagram;
+//    private SVGUniverse svgUniverse;
     private URI svgURI;
+
+    private MoRect destMinZoomSq = new MoRect();
+    private double minZoomSqRatio;
+
+    private MoRect destMaxZoomSq = new MoRect();
+    private double maxZoomSqRatio;
+
+    private Dimension initDim;
 
     public MoSVG() {
         // No need for super(), it's empty.
@@ -31,36 +45,167 @@ public class MoSVG extends SVGIcon {
     public void setup(URI svgURI) {
         this.svgURI = svgURI;
         setSvgURI(svgURI);
+        svgDiagram = getSvgUniverse().getDiagram(svgURI);
+//        int rotation = 0;
+//        int startPosX = 0;
+//        int startPosY = 0;
 
-        int rotation = 0;
-        int startPosX = 0;
-        int startPosY = 0;
+//        setSvgUniverse(SVGCache.getSVGUniverse());
+//        setSvgURI(svgURI);
 
-        final SVGUniverse uni = SVGCache.getSVGUniverse();
-        uni.clear();
-        svgDiagram = uni.getDiagram(svgURI);
-//        svgDiagram = svgUni.getDiagram(svgURI);
-        SVGRoot svgRoot = svgDiagram.getRoot();
+//        svgUniverse = SVGCache.getSVGUniverse();
+//        try {
+//            svgUniverse.loadSVG(svgURI.toURL());
+//            svgDiagram = svgUniverse.getDiagram(svgURI);
+//        } catch (MalformedURLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        svgDiagram = getSvgUniverse().getDiagram(svgURI);
+//        final SVGUniverse uni = SVGCache.getSVGUniverse();
+//        uni.clear();
+//        try {
+//            uni.loadSVG(svgURI.toURL());
+//        } catch (MalformedURLException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        svgDiagram = uni.getDiagram(svgURI);
 
-        StringBuilder builder = new StringBuilder();
-        builder.append("\"rotate(").append(rotation).append(" ")
-                .append(startPosX).append(" ")
-                .append(startPosY).append(" ").append(")\"");
-        try {
-            if (svgRoot.hasAttribute("transform", AnimationElement.AT_XML)) {
-                svgRoot.setAttribute("transform", AnimationElement.AT_XML, builder.toString());
-            } else {
-                svgRoot.addAttribute("transform", AnimationElement.AT_XML, builder.toString());
-            }
-
-            svgRoot.updateTime(0f);
-        } catch (SVGException ignored) {
-
-        }
+//        SVGDiagram svgDiagram = SVGCache.getSVGUniverse().getDiagram(svgURI);
+//        SVGRoot svgRoot = svgDiagram.getRoot();
+//        StringBuilder builder = new StringBuilder();
+//        builder.append("\"rotate(").append(rotation).append(" ")
+//                .append(startPosX).append(" ")
+//                .append(startPosY).append(" ").append(")\"");
+//        try {
+//            if (svgRoot.hasAttribute("transform", AnimationElement.AT_XML)) {
+//                svgRoot.setAttribute("transform", AnimationElement.AT_XML, builder.toString());
+//            } else {
+//                svgRoot.addAttribute("transform", AnimationElement.AT_XML, builder.toString());
+//            }
+//
+//            svgRoot.updateTime(0f);
+//        } catch (SVGException ignored) {
+//
+//        }
     }
 
     public void setSize(Dimension dim) {
         setPreferredSize(dim);
+        initDim = dim;
+    }
+
+    public void scale(double scale) {
+        final int newWidth = (int) (getIconWidth() * (1 + scale));
+        final int newHeight = (int) (getIconHeight() * (1 + scale));
+
+        setPreferredSize(new Dimension(newWidth, newHeight));
+    }
+
+    public void setTrialParts(int roomNum, int minCircleRad) {
+        // Positions are relative to the *plane*
+        destMinZoomSq = getZoomArea(roomNum, "max");
+        minZoomSqRatio = destMinZoomSq.width / (double) initDim.width;
+//
+        destMaxZoomSq = getZoomArea(roomNum, "min");
+        maxZoomSqRatio = destMaxZoomSq.width / (double) initDim.width;
+        conLog.trace("Max ratio = {}; Min Ratio: {}", maxZoomSqRatio, minZoomSqRatio);
+
+        // Add circles
+//        conLog.trace("Room {} Min Area = {}", trial.roomNum, roomMinArea);
+        List<MoCircle> cList = generateCircles(
+                destMaxZoomSq.width,
+                destMaxZoomSq.x,
+                destMaxZoomSq.y, minCircleRad);
+        for (MoCircle c : cList) {
+            addCircle(c.radius, new Point(c.cx, c.cy), ExpFrame.HIGHLIGHT_COLOR);
+        }
+
+        // Paint room walls :)
+        paintRoom(roomNum, ExpFrame.HIGHLIGHT_COLOR);
+    }
+
+    public static List<MoCircle> generateCircles(int W, int Xs, int Ys, int minR) {
+        Random rand = new Random();
+        List<MoCircle> circles = new ArrayList<>();
+        int maxR = W / 6; // Since diameter = 2 * radius, maxR is W / 6
+
+        for (int i = 0; i < 4; i++) {
+            boolean validPosition = false;
+            int cx = 0, cy = 0, r = 0;
+
+            while (!validPosition) {
+                r = rand.nextInt(maxR - minR + 1) + minR;
+
+                switch (i) {
+                    case 0: // Top side
+                        cx = rand.nextInt(W - 2 * r) + Xs + r;
+                        cy = Ys + r;
+                        break;
+                    case 1: // Bottom side
+                        cx = rand.nextInt(W - 2 * r) + Xs + r;
+                        cy = Ys + W - r;
+                        break;
+                    case 2: // Left side
+                        cx = Xs + r;
+                        cy = rand.nextInt(W - 2 * r) + Ys + r;
+                        break;
+                    case 3: // Right side
+                        cx = Xs + W - r;
+                        cy = rand.nextInt(W - 2 * r) + Ys + r;
+                        break;
+                }
+
+                MoCircle newCircle = new MoCircle(cx, cy, r);
+                validPosition = true;
+
+                for (MoCircle circle : circles) {
+                    if (isOverlapping(circle, newCircle)) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+
+                if (validPosition) {
+                    circles.add(newCircle);
+                }
+            }
+        }
+
+        return circles;
+    }
+
+    private static boolean isOverlapping(MoCircle c1, MoCircle c2) {
+        int distance = (int) Point.distance(c1.cx, c1.cy, c2.cx, c2.cy);
+        return distance < (c1.radius + c2.radius);
+    }
+
+    public void paint(Graphics g, Point pos) {
+        paint(null, g, pos);
+//        try {
+//            svgDiagram.render((Graphics2D) g);
+////            svgDiagram.updateTime(0f);
+//        } catch (SVGException e) {
+//            throw new RuntimeException(e);
+//        }
+    }
+
+    public MoRect getDestMaxZoomSq() {
+        destMaxZoomSq.setSize((int) (getIconWidth() * maxZoomSqRatio));
+        final double scale = getIconWidth() / (double) initDim.width;
+        destMaxZoomSq.x = (int) (scale * destMaxZoomSq.x); // Here from (0,0)
+        destMaxZoomSq.y = (int) (scale * destMaxZoomSq.y); // Here from (0,0)
+        return destMaxZoomSq;
+    }
+
+    public MoRect getDestMinZoomSq() {
+        destMinZoomSq.setSize((int) (getIconWidth() * minZoomSqRatio));
+        conLog.info("Min Zoom: {}", destMinZoomSq);
+        final double scale = getIconWidth() / (double) initDim.width;
+        destMinZoomSq.x = (int) (scale * destMinZoomSq.x); // Here from (0,0)
+        destMinZoomSq.y = (int) (scale * destMinZoomSq.y); // Here from (0,0)
+
+        return destMinZoomSq;
     }
 
     public void addText(String txt, Point pos, Color color) {

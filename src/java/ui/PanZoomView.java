@@ -1,13 +1,14 @@
 package ui;
 
+import com.kitfox.svg.SVGCache;
 import control.Server;
 import model.MoPlane;
 import model.MoPoint;
+import model.MoSVG;
 import model.PanZoomTrial;
 import moose.Memo;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
-import tool.MoDimension;
 import tool.MoRect;
 import tool.Resources;
 
@@ -42,9 +43,13 @@ public class PanZoomView extends JPanel
     private boolean isFirstView = true;
 
     // View
+    private MoSVG activeSVG;
+    private final MoSVG plainSVG = new MoSVG();
+    private MoSVG trialSVG;
+
     private MoPlane activePlane;
-    private MoPlane trialPlane;
-    private MoPlane plainPlane;
+//    private MoPlane trialPlane;
+//    private MoPlane plainPlane;
     private MoRect abstractPlane; // Used for calculating the scales, etc.
 
     private final MoPoint planePos = new MoPoint();
@@ -112,6 +117,8 @@ public class PanZoomView extends JPanel
 //        moose.addMooseListener(this);
         Server.get().addPropertyChangeListener(this);
 
+        // Clear any previous svg cache
+        SVGCache.getSVGUniverse().clear();
     }
 
     public void setDesignProperties(double panEndThreshold) {
@@ -141,21 +148,27 @@ public class PanZoomView extends JPanel
         super.setVisible(aFlag);
 
         setBorder(BORDERS.BLACK_BORDER);
-
+        conLog.info("Size: {}", getSize());
         // Create planes (w/ this as initial dimension)
-        plainPlane = new MoPlane(Resources.PLAIN_PLAN_URI);
-        plainPlane.setBounds(initPlanePose, getSize());
+        activePlane = new MoPlane();
+        activePlane.setBounds(initPlanePose, getSize());
 
-        trialPlane = new MoPlane(Resources.PLAIN_PLAN_URI);
-        final MoDimension testDim = new MoDimension(getSize(), -400);
-        trialPlane.setBounds(initPlanePose, getSize());
-//        conLog.info("Room: {}", trial.roomNum);
-        trialPlane.setTrialParts(trial.roomNum, 30);
+        // Set up SVGs
+        plainSVG.setup(Resources.PLAIN_PLAN_URI);
+        plainSVG.setSize(getSize());
+
+        trialSVG = new MoSVG();
+        trialSVG.setup(Resources.TRIAL_PLAN_URI);
+        trialSVG.setSize(getSize());
+        trialSVG.setTrialParts(trial.roomNum, 30);
 
         abstractPlane = new MoRect(initPlanePose, getSize());
 
+        repaint();
+
         // Initial setting
-        activePlane = trialPlane;
+        activeSVG = trialSVG;
+//        activePlane = trialPlane;
         conLog.info("Init ZL = {}", trial.initZoomLvl);
 //        zoomLvl = trial.initZoomLvl;
 //        setZoomLevel(trial.initZoomLvl);
@@ -170,23 +183,26 @@ public class PanZoomView extends JPanel
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        conLog.info("Trial Running: {}, Plane position: {}", isTrialRunning, planePos);
-        conLog.info("Zoom Lvl: {}", zoomLvl);
+        conLog.info("Plane position: {}, Zoom Lvl = {}", planePos, zoomLvl);
+
         if (zoomLvl > ExpFrame.ZOOM_OUT_INFO_THRESHOLD) {
-//            activePlane = trialPlane;
-            plainPlane.paint(this, g, planePos);
+//            plainSVG.paint(g, planePos);
+            activeSVG = trialSVG;
+//            trialPlane.paint(this, g, planePos);
         } else {
+//            trialSVG.paint(g, planePos);
+            activeSVG = plainSVG;
 //            activePlane = plainPlane;
-            plainPlane.paint(this, g, planePos);
+//            plainPlane.paint(this, g, planePos);
         }
 
-//        activePlane.paint(this, g, planePos);
+        activeSVG.paint(g, planePos);
 
-        if (isFirstView) {
-//            zoomLvl = trial.initZoomLvl;
-            setZoomLevel(trial.initZoomLvl);
-            isFirstView = false;
-        }
+//        if (isFirstView) {
+////            zoomLvl = trial.initZoomLvl;
+//            setZoomLevel(trial.initZoomLvl);
+//            isFirstView = false;
+//        }
     }
 
     private Point getCurPoint() {
@@ -197,38 +213,24 @@ public class PanZoomView extends JPanel
     }
 
     /**
-     * Position: -45 <= x, y <= -20
      * @param curPoint
      */
     public void panDisplace(Point curPoint) {
         if (dragPoint == null) grab(curPoint);
 
-        int xDiff = curPoint.x - dragPoint.x;
-        int yDiff = curPoint.y - dragPoint.y;
+        int dX = curPoint.x - dragPoint.x;
+        int dY = curPoint.y - dragPoint.y;
 
         // Plane shouldn't go outside more than its size
         if (isLimitedToView) {
-            final MoPoint posToCheck = MoPoint.copyTranslated(planePos, xDiff, yDiff);
-            conLog.info("posToCheck = {}; W = {}", posToCheck, activePlane.getWidth());
-            int leftThreshold = - activePlane.getWidth() + dsgnPanEndThredholdW;
-            int rightThreshold = getWidth() - dsgnPanEndThredholdW;
-            int topThreshold = - activePlane.getHeight() + dsgnPanEndThredholdH;
-            int bottomThreshold = getHeight() - dsgnPanEndThredholdH;
-
-            if (posToCheck.isXYInClosed(
-                    leftThreshold, rightThreshold,
-                    topThreshold, bottomThreshold)) {
-                planePos.translate(xDiff, yDiff);
+            if (checkTransform(dX, dY, 0)) {
+                planePos.translate(dX, dY);
                 dragPoint = curPoint;
                 repaint();
             }
+
         }
 
-//        dragPoint = curPoint;
-
-//        planePos.translate(xDiff, yDiff);
-
-//        repaint();
     }
 
     /**
@@ -294,45 +296,45 @@ public class PanZoomView extends JPanel
 
     public void focalZoomPercent(Point relPoint, double scale) {
         conLog.info("Focal point: {}, Scale = {}", relPoint, scale);
-        final int plW = activePlane.getWidth();
-        final int plH = activePlane.getHeight();
+        final int plW = activeSVG.getIconWidth();
+        final int plH = activeSVG.getIconHeight();
         final int dX = - (int) (((relPoint.x - planePos.x) * 1.0 / plW) * scale * plW);
         final int dY = - (int) (((relPoint.y - planePos.y) * 1.0 / plH) * scale * plH);
         conLog.info("dX, dY = {}, {}", dX, dY);
+
         if (isLimitedToView) {
-//            final MoPlane checkPlane = trialPlane;
-//            plainPlane.scale(scale);
-            final MoPoint posToCheck = MoPoint.copyTranslated(planePos, dX, dY);
-            abstractPlane.scale(scale);
-            conLog.info("posToCheck = {}", posToCheck);
-//            int leftThreshold = (int) (- activePlane.getWidth() * scale + dsgnPanEndThredholdW);
-//            int rightThreshold = (int) (getWidth() * scale - dsgnPanEndThredholdW);
-//            int topThreshold = (int) (- activePlane.getHeight() * scale + dsgnPanEndThredholdH);
-//            int bottomThreshold = (int) (getHeight() * scale - dsgnPanEndThredholdH);
-            int leftThreshold = - abstractPlane.width + dsgnPanEndThredholdW;
-            int rightThreshold = getWidth() - dsgnPanEndThredholdW;
-            int topThreshold = - abstractPlane.height + dsgnPanEndThredholdH;
-            int bottomThreshold = getHeight() - dsgnPanEndThredholdH;
-            conLog.info("Thresholds: {}, {}, {}, {}",
-                    leftThreshold, rightThreshold, topThreshold, bottomThreshold);
-            if (posToCheck.isXYInClosed(
-                    leftThreshold, rightThreshold,
-                    topThreshold, bottomThreshold)) {
+            final boolean canTransform = checkTransform(dX, dY, scale);
+
+            if (canTransform) {
                 conLog.info("Zooming...");
                 planePos.translate(dX, dY);
 
-                plainPlane.scale(scale);
-                trialPlane.scale(scale);
+                plainSVG.scale(scale);
+                trialSVG.scale(scale);
 
                 zoomLvl += scale * zoomLvl;
 
                 repaint();
-            } else {
-                plainPlane.scale(1/scale);
             }
-
         }
 
+    }
+
+    private boolean checkTransform(int dX, int dY, double scale) {
+        final MoPoint posToCheck = MoPoint.copyTranslated(planePos, dX, dY);
+        abstractPlane.scale(scale);
+        conLog.info("posToCheck = {}", posToCheck);
+
+        int leftThreshold = - abstractPlane.width + dsgnPanEndThredholdW;
+        int rightThreshold = getWidth() - dsgnPanEndThredholdW;
+        int topThreshold = - abstractPlane.height + dsgnPanEndThredholdH;
+        int bottomThreshold = getHeight() - dsgnPanEndThredholdH;
+        conLog.info("Thresholds: {}, {}, {}, {}",
+                leftThreshold, rightThreshold, topThreshold, bottomThreshold);
+
+        return posToCheck.isXYInClosed(
+                leftThreshold, rightThreshold,
+                topThreshold, bottomThreshold);
     }
 
     public void grab(Point grabPoint) {
@@ -367,8 +369,8 @@ public class PanZoomView extends JPanel
      */
     public boolean isSuccess() {
         // Get the zoom dest sqs coords relative to this view
-        MoRect destMaxZoomSq = trialPlane.getDestMaxZoomSq();
-        MoRect destMinZoomSq = trialPlane.getDestMinZoomSq();
+        MoRect destMaxZoomSq = trialSVG.getDestMaxZoomSq();
+        MoRect destMinZoomSq = trialSVG.getDestMinZoomSq();
         destMaxZoomSq.setOrigin(planePos);
         destMinZoomSq.setOrigin(planePos);
 
