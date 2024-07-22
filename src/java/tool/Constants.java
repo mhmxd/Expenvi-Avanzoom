@@ -47,12 +47,12 @@ public class Constants {
 
     //-- Display properties
     public static class DISP {
-//        public final static int PPI = 109; // Apple Display
-        public final static int PPI = 90; // BenQ
+        public final static int PPI = 109; // Apple Display
+//        public final static int PPI = 90; // BenQ
 //        public final static int PPI = 127; // MacBook Pro
 
-        private final static double hPPIScale = 1.01; // BenQ: Height DPI is slightly larger
-//        private final static double hPPIScale = 1.005; // Apple Display
+//        private final static double hPPIScale = 1.01; // BenQ: Height DPI is slightly larger
+        private final static double hPPIScale = 1.005; // Apple Display
 
         public final static double INCH_MM = 25.4;
         public final static double LR_MARGIN_mm = 20; // (mm) Left-right margin
@@ -151,6 +151,8 @@ public class Constants {
         public static final String TOLERANCES = "tolerances";
 
         public static final String WIDTH = "width";
+
+        public static final String THRESHOLD = "threshold";
 
 
 //        public static String chain(String... args) {

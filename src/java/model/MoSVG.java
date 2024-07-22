@@ -36,7 +36,7 @@ public class MoSVG extends SVGIcon {
         int startPosX = 0;
         int startPosY = 0;
 
-        final SVGUniverse uni = new SVGUniverse();
+        final SVGUniverse uni = SVGCache.getSVGUniverse();
         uni.clear();
         svgDiagram = uni.getDiagram(svgURI);
 //        svgDiagram = svgUni.getDiagram(svgURI);

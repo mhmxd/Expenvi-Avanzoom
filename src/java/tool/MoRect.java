@@ -1,5 +1,7 @@
 package tool;
 
+import model.MoPoint;
+
 import java.awt.*;
 
 public class MoRect extends Rectangle {
@@ -14,6 +16,10 @@ public class MoRect extends Rectangle {
 
     public MoRect(int x, int y, int w, int h) {
         super(x, y, w, h);
+    }
+
+    public MoRect(Point pos, Dimension dim) {
+        this(pos.x, pos.y, dim.width, dim.height);
     }
 
     public void setSize(int size) {

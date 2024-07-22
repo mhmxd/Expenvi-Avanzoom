@@ -36,7 +36,7 @@ public class TaskPanel extends JLayeredPane {
     private final String CONFIG_FILE_NAME = "config.properties";
     private final String DESIGN_FILE_NAME = "design.properties";
     public PropertiesConfiguration config;
-    public PropertiesConfiguration expDesign;
+    public PropertiesConfiguration design;
 
     // UI
     JLabel progressLabel = new JLabel();
@@ -116,10 +116,14 @@ public class TaskPanel extends JLayeredPane {
         // Implemented by the children
     }
 
+    protected void loadDesign() {
+
+    }
+
     protected void createBlocks() {
         // Load the experiment designs
         try {
-            expDesign =
+            design =
                     new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
                     .configure(new Parameters()
                             .properties()

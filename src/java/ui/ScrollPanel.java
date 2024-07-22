@@ -8,8 +8,6 @@ import moose.Moose;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.Constants;
-import tool.MoDimension;
-import tool.MoRect;
 
 import javax.swing.*;
 import java.awt.*;
@@ -118,13 +116,13 @@ public class ScrollPanel extends TaskPanel{
 
         // Extract the design factor values
         final String prefix = "scroll";
-        final int numBlocks = expDesign.getInt(
+        final int numBlocks = design.getInt(
                 String.join(".", prefix, STR.NUM, STR.BLOCKS));
-        final List<Direction> directions = expDesign.getList(Direction.class,
+        final List<Direction> directions = design.getList(Direction.class,
                 String.join(".", prefix, STR.DIRECTIONS));
-        final List<Integer> distances = expDesign.getList(Integer.class,
+        final List<Integer> distances = design.getList(Integer.class,
                 String.join(".", prefix, STR.DISTANCES));
-        final List<Integer> tolerances = expDesign.getList(Integer.class,
+        final List<Integer> tolerances = design.getList(Integer.class,
                 String.join(".", prefix, STR.TOLERANCES));
 
         // Create blocks

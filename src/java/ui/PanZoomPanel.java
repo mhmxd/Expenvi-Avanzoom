@@ -7,7 +7,6 @@ import enums.TrialStatus;
 import model.PanZoomBlock;
 import model.PanZoomTrial;
 import moose.Moose;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.*;
@@ -176,6 +175,15 @@ public class PanZoomPanel
     }
 
     @Override
+    protected void loadDesign() {
+        String key = String.join(".", STR.PANZOOM, STR.PAN, STR.END, STR.THRESHOLD);
+        final double panEndThreshold = design.getDouble(key);
+
+        // Set the design property in the view
+        panZoomView.setDesignProperties(panEndThreshold);
+    }
+
+    @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
         if (aFlag) starTask();
@@ -189,7 +197,7 @@ public class PanZoomPanel
         super.createBlocks();
 
         final String key = String.join(".", STR.PANZOOM, STR.NUM, STR.BLOCKS);
-        for (int b = 0; b < expDesign.getInt(key); b++) {
+        for (int b = 0; b < design.getInt(key); b++) {
             blocks.add(new PanZoomBlock(b + 1));
         }
     }
@@ -234,8 +242,9 @@ public class PanZoomPanel
         progressLabel.setText("Trial: " + activeTrial.trialNum + " – " + "Block: " + activeTrial.blockNum);
         progressLabel.setVisible(true);
 
-        // Load config
+        // Load config & design
         loadConfig();
+        loadDesign();
 
         // Log
         Logex.get().activateTrial(activeTrial);
