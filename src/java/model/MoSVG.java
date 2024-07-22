@@ -7,13 +7,10 @@ import com.kitfox.svg.app.beans.SVGPanel;
 import com.kitfox.svg.xml.StyleAttribute;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
-import tool.MoDimension;
 import tool.MoRect;
 import ui.ExpFrame;
 
 import java.awt.*;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +31,7 @@ public class MoSVG extends SVGIcon {
     private MoRect destMaxZoomSq = new MoRect();
     private double maxZoomSqRatio;
 
-    private Dimension initDim;
+    private Dimension originalDim;
 
     public MoSVG() {
         // No need for super(), it's empty.
@@ -46,6 +43,8 @@ public class MoSVG extends SVGIcon {
         this.svgURI = svgURI;
         setSvgURI(svgURI);
         svgDiagram = getSvgUniverse().getDiagram(svgURI);
+        originalDim = new Dimension(getIconWidth(), getIconHeight());
+        conLog.info("Original Dim = {}", originalDim);
 //        int rotation = 0;
 //        int startPosX = 0;
 //        int startPosY = 0;
@@ -92,7 +91,6 @@ public class MoSVG extends SVGIcon {
 
     public void setSize(Dimension dim) {
         setPreferredSize(dim);
-        initDim = dim;
     }
 
     public void scale(double scale) {
@@ -103,13 +101,14 @@ public class MoSVG extends SVGIcon {
     }
 
     public void setTrialParts(int roomNum, int minCircleRad) {
+        conLog.info("initDim = {}", originalDim);
         // Positions are relative to the *plane*
         destMinZoomSq = getZoomArea(roomNum, "max");
-        minZoomSqRatio = destMinZoomSq.width / (double) initDim.width;
-//
+        minZoomSqRatio = destMinZoomSq.width / (double) originalDim.width;
+        conLog.info("destMinZoomSq.width = {}", destMinZoomSq.width);
         destMaxZoomSq = getZoomArea(roomNum, "min");
-        maxZoomSqRatio = destMaxZoomSq.width / (double) initDim.width;
-        conLog.trace("Max ratio = {}; Min Ratio: {}", maxZoomSqRatio, minZoomSqRatio);
+        maxZoomSqRatio = destMaxZoomSq.width / (double) originalDim.width;
+        conLog.info("Max ratio = {}; Min Ratio: {}", maxZoomSqRatio, minZoomSqRatio);
 
         // Add circles
 //        conLog.trace("Room {} Min Area = {}", trial.roomNum, roomMinArea);
@@ -192,7 +191,7 @@ public class MoSVG extends SVGIcon {
 
     public MoRect getDestMaxZoomSq() {
         destMaxZoomSq.setSize((int) (getIconWidth() * maxZoomSqRatio));
-        final double scale = getIconWidth() / (double) initDim.width;
+        final double scale = getIconWidth() / (double) originalDim.width;
         destMaxZoomSq.x = (int) (scale * destMaxZoomSq.x); // Here from (0,0)
         destMaxZoomSq.y = (int) (scale * destMaxZoomSq.y); // Here from (0,0)
         return destMaxZoomSq;
@@ -201,7 +200,7 @@ public class MoSVG extends SVGIcon {
     public MoRect getDestMinZoomSq() {
         destMinZoomSq.setSize((int) (getIconWidth() * minZoomSqRatio));
         conLog.info("Min Zoom: {}", destMinZoomSq);
-        final double scale = getIconWidth() / (double) initDim.width;
+        final double scale = getIconWidth() / (double) originalDim.width;
         destMinZoomSq.x = (int) (scale * destMinZoomSq.x); // Here from (0,0)
         destMinZoomSq.y = (int) (scale * destMinZoomSq.y); // Here from (0,0)
 
