@@ -1,8 +1,8 @@
 package ui;
 
-import control.Logex;
+import logs.MoLogger;
 import enums.TaskType;
-import enums.TrialEvent;
+import logs.TrialInstants;
 import enums.TrialStatus;
 import model.PanZoomBlock;
 import model.PanZoomTrial;
@@ -247,8 +247,8 @@ public class PanZoomPanel
         loadDesign();
 
         // Log
-        Logex.get().activateTrial(activeTrial);
-        Logex.get().logEvent(TrialEvent.TRIAL_OPEN);
+//        MoLogger.get().activateTrial(activeTrial);
+//        MoLogger.get().logEvent(TrialInstants.TRIAL_OPEN);
     }
 
     @Override
@@ -261,21 +261,19 @@ public class PanZoomPanel
     private final AbstractAction endTrialAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Logex.get().logEvent(TrialEvent.SPACE_PRESS);
-            double enterToSpace = Logex.get().getDurationSec(
-                    TrialEvent.getLast(TrialEvent.VIEWPORT_ENTER),
-                    TrialEvent.SPACE_PRESS);
-            double firstZoomToSpace = Logex.get().getDurationSec(
-                    TrialEvent.getFirst(TrialEvent.ZOOM),
-                    TrialEvent.SPACE_PRESS);
-            double enterToLastZoom = Logex.get().getDurationSec(
-                    TrialEvent.getLast(TrialEvent.VIEWPORT_ENTER),
-                    TrialEvent.getLast(TrialEvent.ZOOM));
-            double firstZoomToLastZoom = Logex.get().getDurationSec(
-                    TrialEvent.getFirst(TrialEvent.ZOOM),
-                    TrialEvent.getLast(TrialEvent.ZOOM));
-
-            conLog.debug("En->lZ = {}, fZ->lZ = {}", enterToLastZoom, firstZoomToLastZoom);
+//            MoLogger.get().logEvent(TrialInstants.SPACE_PRESS);
+//            double enterToSpace = MoLogger.get().getDurationSec(
+//                    MoLogger.last(TrialInstants.VIEWPORT_ENTER),
+//                    TrialInstants.SPACE_PRESS);
+//            double firstZoomToSpace = MoLogger.get().getDurationSec(
+//                    MoLogger.first(TrialInstants.ZOOM),
+//                    TrialInstants.SPACE_PRESS);
+//            double enterToLastZoom = MoLogger.get().getDurationSec(
+//                    MoLogger.last(TrialInstants.VIEWPORT_ENTER),
+//                    MoLogger.last(TrialInstants.ZOOM));
+//            double firstZoomToLastZoom = MoLogger.get().getFirstToLastDurSec(TrialInstants.ZOOM);
+//
+//            conLog.debug("En->lZ = {}, fZ->lZ = {}", enterToLastZoom, firstZoomToLastZoom);
 
             endTrial(TrialStatus.FAIL);
         }
@@ -315,7 +313,7 @@ public class PanZoomPanel
     @Override
     public void mouseMoved(MouseEvent e) {
         // Log movement AFTER trial has been opened
-//        if (Logex.get().hasLogged(TrialEvent.TRIAL_OPEN)) Logex.get().logEvent(TrialEvent.MOVE);
+//        if (MoLogger.get().hasLogged(TrialInstants.TRIAL_OPEN)) MoLogger.get().logEvent(TrialInstants.MOVE);
         final Point mp = MouseInfo.getPointerInfo().getLocation();
         SwingUtilities.convertPointFromScreen(mp, this);
         final Point p = e.getPoint();

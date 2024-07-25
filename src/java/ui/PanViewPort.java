@@ -8,9 +8,9 @@ import com.kitfox.svg.SVGRoot;
 import com.kitfox.svg.animation.AnimationElement;
 import com.kitfox.svg.app.beans.SVGIcon;
 import com.kitfox.svg.app.beans.SVGPanel;
-import control.Logex;
+import logs.MoLogger;
 import control.Server;
-import enums.TrialEvent;
+import logs.TrialInstants;
 import enums.TrialStatus;
 import model.PanTrial;
 import moose.Memo;
@@ -263,25 +263,25 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
      */
     private void scanFocusAreaForCurve(int[] focusPixels) {
         // Has the curve entered the focus area?
-        boolean focusEntered = Logex.get().hasLogged(TrialEvent.getFirst(TrialEvent.FOCUS_ENTER));
-
-        // Check if line is inside focus area
-        if (focusEntered) nScans++; // Only count after entering the focus area
-        for (int c : focusPixels) {
-            Color clr = new Color(c);
-            if (clr.equals(Color.BLACK)) {
-                focusArea.setActive(true);
-                if (focusEntered) nScansCurveInsideFocus++; // Only count after entering the focus area
-
-                logInsideFocus(); // LOG
-                return;
-            }
-        }
-
-        focusArea.setActive(false);
-
-        // No black was found
-        logOutsideFocus();
+//        boolean focusEntered = MoLogger.get().hasLogged(STR.first(TrialInstants.FOCUS_ENTER));
+//
+//        // Check if line is inside focus area
+//        if (focusEntered) nScans++; // Only count after entering the focus area
+//        for (int c : focusPixels) {
+//            Color clr = new Color(c);
+//            if (clr.equals(Color.BLACK)) {
+//                focusArea.setActive(true);
+//                if (focusEntered) nScansCurveInsideFocus++; // Only count after entering the focus area
+//
+//                logInsideFocus(); // LOG
+//                return;
+//            }
+//        }
+//
+//        focusArea.setActive(false);
+//
+//        // No black was found
+//        logOutsideFocus();
     }
 
     /**
@@ -316,7 +316,7 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
      * @param dY Delta-Y
      */
     public void translate(int dX, int dY) {
-        Logex.get().logEvent(TrialEvent.PAN); // LOG
+//        MoLogger.get().logEvent(TrialInstants.PAN); // LOG
 
         this.xDiff += dX;
         this.yDiff += dY;
@@ -326,10 +326,10 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
         repaint();
 
         if (isTrialFinished()) {
-            Duration totalTrialDuration = Duration.between(
-                    Logex.get().getTrialInstant(TrialEvent.getFirst(TrialEvent.FOCUS_ENTER)),
-                    Instant.now());
-            conLog.debug("Duration = {}", totalTrialDuration);
+//            Duration totalTrialDuration = Duration.between(
+//                    MoLogger.get().getTrialInstant(STR.first(TrialInstants.FOCUS_ENTER)),
+//                    Instant.now());
+//            conLog.debug("Duration = {}", totalTrialDuration);
             // < 90% of the curve traversed inside the focus area => error
             isTrialActive = false;
             hasFocus = false;
@@ -530,24 +530,24 @@ public class PanViewPort extends JPanel implements MouseListener, MouseMotionLis
     // Logs ------------------------------------------------------------------------
     private void logInsideFocus() {
         // If hasn't entered before or has exited before
-        if (!Logex.get().hasLoggedKey(TrialEvent.FOCUS_ENTER) ||
-                Logex.get().hasLoggedKey(TrialEvent.FOCUS_EXIT)) {
-            Logex.get().logEvent(TrialEvent.FOCUS_ENTER);
-
-            // Start the stopwatch (if not already started)
-            if (!insideFocusStopwatch.isRunning()) insideFocusStopwatch.start();
-        }
+//        if (!MoLogger.get().hasLogged(TrialInstants.FOCUS_ENTER) ||
+//                MoLogger.get().hasLogged(TrialInstants.FOCUS_EXIT)) {
+//            MoLogger.get().logEvent(TrialInstants.FOCUS_ENTER);
+//
+//            // Start the stopwatch (if not already started)
+//            if (!insideFocusStopwatch.isRunning()) insideFocusStopwatch.start();
+//        }
 
     }
 
     private void logOutsideFocus() {
         // If hasn't exited before or has entered before
-        if (Logex.get().hasLoggedKey(TrialEvent.FOCUS_ENTER)) {
-            Logex.get().logEvent(TrialEvent.FOCUS_EXIT);
-
-            // Start the stopwatch (if not already started)
-            if (insideFocusStopwatch.isRunning()) insideFocusStopwatch.stop();
-        }
+//        if (MoLogger.get().hasLogged(TrialInstants.FOCUS_ENTER)) {
+//            MoLogger.get().logEvent(TrialInstants.FOCUS_EXIT);
+//
+//            // Start the stopwatch (if not already started)
+//            if (insideFocusStopwatch.isRunning()) insideFocusStopwatch.stop();
+//        }
     }
 
 }

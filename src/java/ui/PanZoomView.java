@@ -1,6 +1,7 @@
 package ui;
 
 import com.kitfox.svg.SVGCache;
+import logs.MoLogger;
 import control.Server;
 import model.MoPlane;
 import model.MoPoint;
@@ -17,6 +18,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +28,12 @@ import static tool.Constants.*;
 
 public class PanZoomView extends JPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, PropertyChangeListener {
-    private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
+    private final TaggedLogger conLog = Logger.tag("CONSOLE");
+    private final TaggedLogger trialLog = Logger.tag("TRIAL");
+    private final TaggedLogger eventLog = Logger.tag("EVENT");
+    private final TaggedLogger motionLog = Logger.tag("MOTION");
+
+    private Instant firstPan, firstZoom;
 
     // Constants
 //    private String VK_SPACE = String.valueOf(KeyEvent.VK_SPACE);
@@ -119,6 +127,14 @@ public class PanZoomView extends JPanel
 
         // Clear any previous svg cache
         SVGCache.getSVGUniverse().clear();
+
+        // LOG
+        trialLog.info("P{} – Trial: {}; {}; {}",
+                ExpFrame.pID,
+                trial.id, trial.blockNum, trial.trialNum);
+        eventLog.info("P{} – Trial: {}; {}; {}",
+                ExpFrame.pID,
+                trial.id, trial.blockNum, trial.trialNum);
     }
 
     public void setDesignProperties(double panEndThreshold) {
@@ -146,9 +162,13 @@ public class PanZoomView extends JPanel
     @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);
+        trialLog.info("Open");
+        eventLog.info("Open");
+        firstPan = Instant.MIN;
+        firstZoom = Instant.MIN;
 
         setBorder(BORDERS.BLACK_BORDER);
-        conLog.info("Size: {}", getSize());
+        conLog.trace("Size: {}", getSize());
         // Create planes (w/ this as initial dimension)
         activePlane = new MoPlane();
         activePlane.setBounds(initPlanePose, getSize());
@@ -171,19 +191,24 @@ public class PanZoomView extends JPanel
 //        activePlane = trialPlane;
         conLog.info("Init ZL = {}", trial.initZoomLvl);
 //        zoomLvl = trial.initZoomLvl;
-//        setZoomLevel(trial.initZoomLvl);
+        setZoomLevel(trial.initZoomLvl);
 
         // Check if the cursor is inside
-        if (getBounds().contains(getCurPoint())) {
+        final Point curPoint = getCurPoint();
+        conLog.info("curPoint = {}, inside? {}, {}", curPoint, contains(curPoint),
+                getBounds().contains(curPoint));
+        if (contains(curPoint)) {
             isCursorInside = true;
         }
+
+
     }
 
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        conLog.info("Plane position: {}, Zoom Lvl = {}", planePos, zoomLvl);
+        conLog.trace("Plane position: {}, Zoom Lvl = {}", planePos, zoomLvl);
 
         if (zoomLvl > ExpFrame.ZOOM_OUT_INFO_THRESHOLD) {
 //            plainSVG.paint(g, planePos);
@@ -216,6 +241,9 @@ public class PanZoomView extends JPanel
      * @param curPoint
      */
     public void panDisplace(Point curPoint) {
+        eventLog.info("Pan Displace – Cursor Point = {}", curPoint);
+        if (firstPan == Instant.MIN) firstPan = Instant.now();
+
         if (dragPoint == null) grab(curPoint);
 
         int dX = curPoint.x - dragPoint.x;
@@ -243,6 +271,10 @@ public class PanZoomView extends JPanel
 
         PanTask panTask = new PanTask(vX, vY);
         panner.scheduleAtFixedRate(panTask, 0, 10, TimeUnit.MILLISECONDS);
+
+        // LOG
+        eventLog.info("Pan Fling – vX, vY = {}, {}", vX, vY);
+        if (firstPan == Instant.MIN) firstPan = Instant.now();
     }
 
     /**
@@ -252,6 +284,9 @@ public class PanZoomView extends JPanel
      */
     public void panDisplace(int dX, int dY) {
         conLog.info("Pan dX, dY = {}, {}", dX, dY);
+        eventLog.info("Pan Displace – dX, dY = {}, {}", dX, dY);
+        if (firstPan == Instant.MIN) firstPan = Instant.now();
+
         planePos.translate((int) (dX * cnfgPanGain), (int) (dY * cnfgPanGain));
         repaint();
     }
@@ -284,6 +319,7 @@ public class PanZoomView extends JPanel
         double prcnt = -dZ/100.0;
         focalZoomPercent(relPoint, prcnt);
         conLog.info("Prcnt = {}", prcnt);
+        eventLog.info("Zoom – prcnt = {}", prcnt);
     }
 
     public void setZoomLevel(double newZoomLvl) {
@@ -292,10 +328,16 @@ public class PanZoomView extends JPanel
         conLog.info("newZoomLvl - zoomLvl = {}", newZoomLvl - zoomLvl);
         conLog.info("zScale = {}", zScale);
         focalZoomPercent(centerPoint, zScale);
+
+        // LOG
+        eventLog.info("Zoom – level = {}", newZoomLvl);
     }
 
     public void focalZoomPercent(Point relPoint, double scale) {
         conLog.info("Focal point: {}, Scale = {}", relPoint, scale);
+        eventLog.info("Zoom – Scale = {}", scale);
+        if (firstZoom == Instant.MIN) firstZoom = Instant.now();
+
         final int plW = activeSVG.getIconWidth();
         final int plH = activeSVG.getIconHeight();
         final int dX = - (int) (((relPoint.x - planePos.x) * 1.0 / plW) * scale * plW);
@@ -323,13 +365,13 @@ public class PanZoomView extends JPanel
     private boolean checkTransform(int dX, int dY, double scale) {
         final MoPoint posToCheck = MoPoint.copyTranslated(planePos, dX, dY);
         abstractPlane.scale(scale);
-        conLog.info("posToCheck = {}", posToCheck);
+        conLog.trace("posToCheck = {}", posToCheck);
 
         int leftThreshold = - abstractPlane.width + dsgnPanEndThredholdW;
         int rightThreshold = getWidth() - dsgnPanEndThredholdW;
         int topThreshold = - abstractPlane.height + dsgnPanEndThredholdH;
         int bottomThreshold = getHeight() - dsgnPanEndThredholdH;
-        conLog.info("Thresholds: {}, {}, {}, {}",
+        conLog.trace("Thresholds: {}, {}, {}, {}",
                 leftThreshold, rightThreshold, topThreshold, bottomThreshold);
 
         return posToCheck.isXYInClosed(
@@ -338,6 +380,7 @@ public class PanZoomView extends JPanel
     }
 
     public void grab(Point grabPoint) {
+        eventLog.info("Mouse – Grab {}", grabPoint);
         // Get the start point
         if (dragPoint == null) dragPoint = grabPoint;
 
@@ -347,6 +390,7 @@ public class PanZoomView extends JPanel
     }
 
     public void grab() {
+        eventLog.info("Mouse – Grab");
         final Point grabPoint = MouseInfo.getPointerInfo().getLocation();
         SwingUtilities.convertPointFromScreen(grabPoint, this);
         // Get the start point
@@ -357,6 +401,7 @@ public class PanZoomView extends JPanel
     }
 
     private void release() {
+        eventLog.info("Mouse – Release");
         // Change back the cursor and flag
 //        getParent().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         isGrabbed = false;
@@ -384,13 +429,20 @@ public class PanZoomView extends JPanel
         conLog.info("Circles showing: {}" , areCirclesVisible);
         conLog.info("View: {}; Dest Min ZSq: {}; Dest Max ZSq: {}",
                 viewRect, destMinZoomSq, destMaxZoomSq);
-
+        trialLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
+        Long panTrialTime = Duration.between(firstPan, Instant.now()).toMillis();
+        Long zoomTrialTime = Duration.between(firstZoom, Instant.now()).toMillis();
+        trialLog.info("Trial Time – From Pan = {}, Zoom = {}", panTrialTime, zoomTrialTime);
+        trialLog.info("-----------------------------------------------------");
+        eventLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
+        eventLog.info("-----------------------------------------------------");
         return areWallsInvisible && areCirclesVisible;
     }
 
     //----------------------------------------------------------------------------------------------------
     @Override
     public void mouseClicked(MouseEvent e) {
+        motionLog.info("MouseClicked – {}", e.paramString());
         // TEST
 //        conLog.info("Button = {}", e.getButton());
 //        if (e.getButton() == MouseEvent.BUTTON3) { // R-Cl
@@ -401,6 +453,8 @@ public class PanZoomView extends JPanel
 
     @Override
     public void mousePressed(MouseEvent e) {
+        motionLog.info("MousePressed – {}", e.paramString());
+        MoLogger.get().logMouseEvent(e);
         // Wheel press: button=2,modifiers=⌥+Button2,extModifiers=Button2
         if (e.getButton() == 2 || e.getButton() == 3) {
             grab(e.getLocationOnScreen());
@@ -409,18 +463,21 @@ public class PanZoomView extends JPanel
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        motionLog.info("MouseReleased – {}", e.paramString());
 //        getParent().setCursor(DEF_CURSOR);
         release();
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
+        motionLog.info("MouseEntered – {}", e.paramString());
         conLog.trace("Entered");
         isCursorInside = true;
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
+        motionLog.info("MouseExited – {}", e.paramString());
         conLog.trace("Exited");
         isCursorInside = false;
         release();
@@ -428,6 +485,7 @@ public class PanZoomView extends JPanel
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        motionLog.info("MouseDragged – {}", e.paramString());
         // Wheel button: e.getModifiersEx() => Button2
         if (e.getButton() == 2 || e.getButton() == 3) {
             setCursor(HAND_CURSOR);
@@ -437,6 +495,7 @@ public class PanZoomView extends JPanel
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        motionLog.info("MouseMoved – {}", e.paramString());
         if (isGrabbed) {
             panDisplace(getCurPoint());
         }
@@ -444,6 +503,7 @@ public class PanZoomView extends JPanel
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
+        motionLog.info("MouseWheelEvent – {}", e.paramString());
 //        final int dZ = e.getWheelRotation();
 //        detent -= dZ; // Zoom-in -> must be +
         conLog.info("Rotation = {}, Prec. Rot = {}",

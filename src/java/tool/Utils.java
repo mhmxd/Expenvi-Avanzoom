@@ -8,10 +8,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static tool.Constants.DISP;
 
@@ -118,25 +116,6 @@ public class Utils {
         else if (value + change > max) return max;
         return value;
     }
-
-    /**
-     * mm to pixel
-     * @param mm - millimeters
-     * @return equivalant in pixels
-     */
-//    public static int mm2px(double mm) {
-//        return (int) ((mm / DISP.INCH_MM) * DISP.PPI);
-//    }
-
-    /**
-     * mm to pixel
-     * @param px - pixels
-     * @return equivalant in mm
-     */
-//    public static double px2mm(double px) {
-//        return (px / DISP.PPI) * DISP.INCH_MM;
-//    }
-
     /**
      * Get the time in millis (in each day)
      * @return Timestamp (long)
@@ -146,6 +125,10 @@ public class Utils {
     }
 
 
+    public static String nowDate() {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+        return format.format(Calendar.getInstance().getTime());
+    }
 
 
 }

@@ -47,12 +47,12 @@ public class Constants {
 
     //-- Display properties
     public static class DISP {
-//        public final static int PPI = 109; // Apple Display
-        public final static int PPI = 90; // BenQ
+        public final static int PPI = 109; // Apple Display
+//        public final static int PPI = 90; // BenQ
 //        public final static int PPI = 127; // MacBook Pro
 
-        private final static double hPPIScale = 1.01; // BenQ: Height DPI is slightly larger
-//        private final static double hPPIScale = 1.005; // Apple Display
+//        private final static double hPPIScale = 1.01; // BenQ: Height DPI is slightly larger
+        private final static double hPPIScale = 1.005; // Apple Display
 
         public final static double INCH_MM = 25.4;
         public final static double LR_MARGIN_mm = 20; // (mm) Left-right margin
@@ -93,11 +93,11 @@ public class Constants {
 
     //-- Strings
     public static class STR {
+        public static final String SP = ";";
+
         public static final String MOOSE = "moose";
         public final static String CONNECTION = "connection";
         public final static String END = "end";
-
-        public static final String MEMO_SP = ";";
 
         public static final String CLICK = "click";
         public static final String SCROLL = "scroll";
@@ -155,16 +155,6 @@ public class Constants {
         public static final String THRESHOLD = "threshold";
 
 
-//        public static String chain(String... args) {
-//            StringBuilder sb = new StringBuilder();
-//            for (int i = 0; i < args.length - 1; i++) {
-//                sb.append(args[i]).append(".");
-//            }
-//            sb.append(args[args.length - 1]);
-//
-//            return sb.toString();
-//        }
-
         /**
          * Null-safe String comparison
          */
@@ -172,5 +162,24 @@ public class Constants {
             return Objects.equals(s1, s2);
         }
 
+        /**
+         * Get the name of the 'last' event for this key
+         * e.g., zoom -> last_zoom
+         * @param key Key (form the keys here)
+         * @return Event name of the last occurance
+         */
+        public static String last(String key) {
+            return "last_" + key;
+        }
+
+        /**
+         * Get the name of the 'first' event for this key
+         * e.g., zoom -> first_zoom
+         * @param key Key (form the keys here)
+         * @return Event name of the first occurance
+         */
+        public static String first(String key) {
+            return "first_" + key;
+        }
     }
 }

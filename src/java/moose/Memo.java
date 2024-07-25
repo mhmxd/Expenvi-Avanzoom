@@ -132,7 +132,7 @@ public class Memo {
     public static Memo valueOf(String msg) {
         Memo result = new Memo();
         if (msg != null) {
-            String[] parts = msg.split(STR.MEMO_SP);
+            String[] parts = msg.split(STR.SP);
 
             if (parts.length >= 4 && parts.length <= 5) {
                 result.action = parts[0];
@@ -156,6 +156,6 @@ public class Memo {
      */
     @Override
     public String toString() {
-        return action + STR.MEMO_SP + mode + STR.MEMO_SP + value1 + STR.MEMO_SP + value2;
+        return action + STR.SP + mode + STR.SP + value1 + STR.SP + value2;
     }
 }

@@ -1,12 +1,11 @@
 package ui;
 
-import control.Logex;
+import logs.MoLogger;
 import enums.TaskType;
-import enums.TrialEvent;
+import logs.TrialInstants;
 import enums.TrialStatus;
 import model.PanTrial;
 import moose.Moose;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.Constants;
@@ -182,8 +181,8 @@ public class PanPanel extends TaskPanel {
         panViewPort.setVisible(true);
         add(panViewPort, JLayeredPane.PALETTE_LAYER);
 
-        // Set up the Logex for this trial
-        Logex.get().activateTrial(activeTrial);
+        // Set up the MoLogger for this trial
+        MoLogger.get().activateTrial(activeTrial);
     }
 
     /**
@@ -223,11 +222,11 @@ public class PanPanel extends TaskPanel {
                     showError("The curve must not be outside for more than 10% of the time!");
                 }
             } else {
-                double firstPanToLastPan = Logex.get().getDurationSec(
-                        TrialEvent.getFirst(TrialEvent.PAN),
-                        TrialEvent.getLast(TrialEvent.PAN));
-
-                conLog.info("Time: FP-LP = {}", firstPanToLastPan);
+//                double firstPanToLastPan = MoLogger.get().getDurationSec(
+//                        STR.first(TrialInstants.PAN),
+//                        STR.last(TrialInstants.PAN));
+//
+//                conLog.info("Time: FP-LP = {}", firstPanToLastPan);
                 endTrial(TrialStatus.FAIL);
             }
         }

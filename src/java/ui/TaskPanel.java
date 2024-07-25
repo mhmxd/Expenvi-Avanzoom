@@ -1,7 +1,7 @@
 package ui;
 
-import control.Logex;
-import enums.TrialEvent;
+import logs.MoLogger;
+import logs.TrialInstants;
 import enums.TrialStatus;
 import model.Block;
 import model.Trial;
@@ -173,10 +173,10 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void endTrial(int status) {
-        Logex.get().logEvent(TrialEvent.TRIAL_CLOSE);
-        double openToClose = Logex.get().getDurationSec(TrialEvent.TRIAL_OPEN, TrialEvent.TRIAL_CLOSE);
-        conLog.debug("Time: Open to Close = {}", openToClose);
-        conLog.debug("--------------------------");
+//        MoLogger.get().logEvent(TrialInstants.TRIAL_CLOSE);
+//        double openToClose = MoLogger.get().getDurationSec(TrialInstants.TRIAL_OPEN, TrialInstants.TRIAL_CLOSE);
+//        conLog.debug("Time: Open to Close = {}", openToClose);
+        conLog.debug("---------------------------------");
         if (status == TrialStatus.SUCCESS) {
             if (activeBlock.isBlockFinished(activeTrial.trialNum)) { // Block finished -> show break|end
                 conLog.info("Block Finished");
