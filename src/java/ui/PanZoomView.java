@@ -11,6 +11,7 @@ import moose.Memo;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 import tool.MoRect;
+import tool.MoTime;
 import tool.Resources;
 
 import javax.swing.*;
@@ -433,9 +434,8 @@ public class PanZoomView extends JPanel
         conLog.info("View: {}; Dest Min ZSq: {}; Dest Max ZSq: {}",
                 viewRect, destMinZoomSq, destMaxZoomSq);
         trialLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
-
-        Long panTrialTime = Duration.between(firstPan, Instant.now()).toMillis();
-        Long zoomTrialTime = Duration.between(firstZoom, Instant.now()).toMillis();
+        Long panTrialTime = MoTime.tillNowMillis(firstPan);
+        Long zoomTrialTime = MoTime.tillNowMillis(firstZoom);
         trialLog.info("Trial Time – From Pan = {}, Zoom = {}", panTrialTime, zoomTrialTime);
         trialLog.info("-----------------------------------------------------");
         eventLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
