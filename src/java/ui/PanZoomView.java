@@ -20,6 +20,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalField;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +36,7 @@ public class PanZoomView extends JPanel
     private final TaggedLogger eventLog = Logger.tag("EVENT");
     private final TaggedLogger motionLog = Logger.tag("MOTION");
 
-    private Instant firstPan, firstZoom;
+    private Instant firstPan = Instant.EPOCH, firstZoom = Instant.EPOCH;
 
     // Constants
 //    private String VK_SPACE = String.valueOf(KeyEvent.VK_SPACE);
@@ -430,6 +433,7 @@ public class PanZoomView extends JPanel
         conLog.info("View: {}; Dest Min ZSq: {}; Dest Max ZSq: {}",
                 viewRect, destMinZoomSq, destMaxZoomSq);
         trialLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
+
         Long panTrialTime = Duration.between(firstPan, Instant.now()).toMillis();
         Long zoomTrialTime = Duration.between(firstZoom, Instant.now()).toMillis();
         trialLog.info("Trial Time – From Pan = {}, Zoom = {}", panTrialTime, zoomTrialTime);
