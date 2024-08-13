@@ -1,0 +1,16 @@
+{
+  "numScrollBlocks": 5,
+  "scrollDistances": [50, 200, 600],
+  "scrollTolerances": [5, 7, 9],
+  "scrollIndicWidth": 7,
+
+  "numPanReps": 6,
+
+  "numZoomBlocks": 10,
+  "numZoomReps": 5,
+  "zoomDistances": [15, 30, 60],
+  "zoomTolerance": 3,
+
+  "numPanZoomBlocks": 5,
+  "panZoomEndThreshold": 4
+}

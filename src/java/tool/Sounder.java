@@ -48,7 +48,7 @@ public class Sounder {
 //        hitClip.start();
 
         player.execute(() -> {
-            hitClip.setMicrosecondPosition(1); // Reset to the start of the file
+            hitClip.setFramePosition(0); // Reset to the start of the file
             hitClip.start();
         });
     }

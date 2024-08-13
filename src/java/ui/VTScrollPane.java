@@ -2,6 +2,7 @@ package ui;
 
 import control.Server;
 import enums.Direction;
+import model.Config;
 import model.ScrollTrial;
 import moose.Memo;
 import org.tinylog.Logger;
@@ -33,7 +34,7 @@ import java.util.ArrayList;
 import static tool.Constants.*;
 
 public class VTScrollPane extends JScrollPane implements MouseListener, MouseWheelListener, PropertyChangeListener {
-    private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
+    private final TaggedLogger conLog = Logger.tag(STR.CONSOLE);
 
     // Local Constants
     private final Color COLOR_VIEW_BORDER = COLORS.PLATINIUM;
@@ -72,12 +73,15 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     private boolean continueScrolling; // To continue scrolling
 
     private double velocity; // px/s
+    private Thread flingThread;
 
     // CONFIG: Value read from Config (ExFrame)
+    private Config config;
+
 //    private PropertiesConfiguration config = new PropertiesConfiguration();
-    private double cnfgVelocityGain;
-    private double cnfgVelocityFriction;
-    private double cnfgMinFlingVelocity;
+//    private double cnfgVelocityGain;
+//    private double cnfgVelocityFriction;
+//    private double cnfgMinFlingVelocity;
 
     // For logging
 //    private GeneralInfo mGenInfo = new GeneralInfo();
@@ -119,15 +123,15 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
 //        final String wrappedFile = fileName + "-wrapped.txt";
 
         try {
-            if (reWrap) {
-                final File wFile = new File(wrappedFile);
-                StringWrapper.wrapText(
-                        Resources.TEXT.URI_LOREM,
-                        wrappedFile,
-                        WRAP_CHARS_COUNT);
-            } else {
-                countLines(wrappedFile);
-            }
+//            if (reWrap) {
+//                final File wFile = new File(wrappedFile);
+//                StringWrapper.wrapText(
+//                        Resources.TEXT.URI_LOREM,
+//                        wrappedFile,
+//                        WRAP_CHARS_COUNT);
+//            } else {
+//                countLines(wrappedFile);
+//            }
 
             // Set the number of lines
             nLines = charCountInLines.size();
@@ -146,6 +150,22 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             final int len = bodyTextPane.getStyledDocument().getLength();
             bodyTextPane.getStyledDocument().setParagraphAttributes(0, len, bodyStyle, false);
 
+            // Web page
+//            JEditorPane jep = new JEditorPane();
+//            jep.setEditable(false);
+//
+//            try {
+//                File file1= new File("lorem.html");
+//                jep.setContentType("text/html");
+//                jep.setEditable(false);
+//                jep.setPage(file1.toURI().toURL());
+////                jep.setPage("http://www.google.com");
+//            }catch (IOException e) {
+//                jep.setContentType("text/html");
+//                jep.setText("<html>Could not load</html>");
+//            }
+//
+//            getViewport().add(jep);
             getViewport().add(bodyTextPane);
 
         } catch (IOException e) {
@@ -158,13 +178,17 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         return this;
     }
 
-    public void setConfig(double velGain, double velFriction, double minFlingVel) {
-        cnfgVelocityGain = velGain;
-        cnfgVelocityFriction = velFriction;
-        cnfgMinFlingVelocity = minFlingVel;
-
-        conLog.info("New config set!");
+    public void setConfig(Config scrollConfig) {
+        config = scrollConfig;
     }
+
+//    public void setConfig(double velGain, double velFriction, double minFlingVel) {
+//        cnfgVelocityGain = velGain;
+//        cnfgVelocityFriction = velFriction;
+//        cnfgMinFlingVelocity = minFlingVel;
+//
+//        conLog.info("New config set!");
+//    }
 
     /**
      * Set the line numbers (H is the same as the scroll pane)
@@ -251,8 +275,36 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     public void setTrial(ScrollTrial trial) {
         activeTrial = trial;
 
+        //--- Choose a target line based on the distance and direction
+        // General min/max
+//        int minInd = mVTScrollPane.getNVisibleLines(); // No highlight at the top
+//        int maxInd = (mVTScrollPane.getNLines() - 1) - mVTScrollPane.getNVisibleLines();
+//
+//        if (trial.direction == Direction.N) {
+//            maxInd -= mGenInfo.trial.getVtDist();
+//        } else {
+//            minInd += mGenInfo.trial.getVtDist();
+//        }
+//
+//        return mVTScrollPane.getRandLine(minInd, maxInd);
+
         // Highlight the line
-        highlight(265);
+        final int targetLineInd = randLineInd();
+        highlight(targetLineInd);
+
+        // Set the initial scroll position
+        if (activeTrial.direction == Direction.N) {
+            conLog.warn("Target Ind = {}, Init Ind = {}", targetLineInd,
+                    targetLineInd + activeTrial.distance);
+            setScrollPosition(targetLineInd + activeTrial.distance);
+        } else {
+            conLog.warn("Target Ind = {}, Init Ind = {}", targetLineInd,
+                    targetLineInd - activeTrial.distance);
+            setScrollPosition(targetLineInd - activeTrial.distance);
+        }
+
+
+
 //        highlight(randLineInd());
     }
 
@@ -274,9 +326,9 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
             int stIndex = (targetLineInd - 1) * (WRAP_CHARS_COUNT + 1);
 //            int endIndex = stIndex + charCountInLines.get(targetLineInd); // highlight the whole line
             final String line = bodyTextPane.getText(stIndex, WRAP_CHARS_COUNT + 1);
-            conLog.info("Line: {}", line);
+            conLog.trace("Line: {}", line);
             final int endPadLen = line.length() - line.trim().length();
-            conLog.info("nBlanks = {}", endPadLen);
+            conLog.trace("nBlanks = {}", endPadLen);
 
             int endIndex = stIndex + WRAP_CHARS_COUNT + 1 - endPadLen;
 
@@ -373,6 +425,8 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
      * @return Number of visible lines
      */
     public int getNLinesInside() {
+        if (getLineHeight() == 0) return 0;
+
         return getHeight() / getLineHeight();
 //        return dim.height / getLineHeight();
     }
@@ -435,7 +489,7 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         do {
             lineInd = Utils.randInt(minInd, maxInd);
         } while (StringWrapper.getLine(wrappedFile, lineInd).isEmpty());
-
+        conLog.info("Rand Line Ind = {}", lineInd);
         return lineInd;
     }
 
@@ -448,12 +502,33 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         return nTargetAppear;
     }
 
+    public boolean isTargetWithinIndicator() {
+        final int scrollVal = getVerticalScrollBar().getValue();
+        return targetMinMax.isWithin(scrollVal);
+    }
+
+    private void setScrollPosition(int lineInd) {
+        conLog.info("Scroll pos = {}", lineInd * getLineHeight());
+        final int scrollAmt = lineInd * getLineHeight();
+        Dimension vpDim = getViewport().getView().getPreferredSize(); // Can be also Preferred
+        int extent = getVerticalScrollBar().getModel().getExtent();
+        conLog.info("vpDim = {}, extent = {}", vpDim, extent);
+        Point vpPos = getViewport().getViewPosition();
+        int newY = vpPos.y + scrollAmt;
+        conLog.info("vpPos = {}, newPos = {}", vpPos.y, newY);
+        if (newY != vpPos.y && newY >= 0 && newY <= (vpDim.height - extent)) {
+            getViewport().setViewPosition(new Point(vpPos.x, newY));
+        }
+
+        repaint();
+    }
+
     /**
      * Scroll a certain amount
      * @param scrollAmt Amount to scroll (in px)
      */
     public void scroll(int scrollAmt) {
-        conLog.info("Scrolling {}", scrollAmt);
+        conLog.trace("Scrolling {}", scrollAmt);
         // Scroll only if cursor is inside
         if (mCursorIn) {
             Dimension vpDim = getViewport().getView().getSize(); // Can be also Preferred
@@ -477,27 +552,29 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         conLog.info("Fling with v = {}", v);
         velocity += v; // Cumulative velocity
         conLog.info("Veloctity = {}", velocity);
-        new Thread(() -> {
+        flingThread = new Thread(() -> {
             conLog.info("Thread!! {}, {}", continueScrolling, Math.abs(velocity) );
-            while (continueScrolling && Math.abs(velocity) > cnfgMinFlingVelocity) {
-                final int dY = (int) (velocity * 0.1); // 0.1s => 0.1Vel px
+            while (continueScrolling && Math.abs(velocity) > config.flingMinVelocity) {
+                final int dY = (int) (velocity * 0.01); // 0.01s => 0.01Vel px
                 scroll(dY);
 
-                velocity *= cnfgVelocityFriction; // Friction
+                velocity -= velocity * config.flingVelocityFriction; // Reduce velocity with friction
 
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 } catch (InterruptedException ex) {
                     break;
                 }
             }
-        }).start();
+        });
+        flingThread.start();
     }
 
     private void stopScroll() {
-        conLog.info("Stop!");
+        conLog.trace("Stop!");
         continueScrolling = false;
         velocity = 0;
+//        flingThread.stop();
     }
 
     // MouseListener ========================================================================================
@@ -546,9 +623,10 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
     public void mouseWheelMoved(MouseWheelEvent e) {
 
         if (wheelEnabled) {
-            final double unitsToScroll = e.getPreciseWheelRotation();
-            final int dY = (int) (unitsToScroll * 5);
-            scroll(dY); // Logging is done inside scroll()
+            final double nNotches = e.getPreciseWheelRotation();
+            conLog.info("Notches = {}", nNotches);
+            final int scrollAmt = (int) (nNotches * config.scrollWheelGain);
+            scroll(scrollAmt); // Logging is done inside scroll()
         }
 
     }
@@ -558,15 +636,23 @@ public class VTScrollPane extends JScrollPane implements MouseListener, MouseWhe
         // Is it related to Moose?
         if (STR.equals(evt.getPropertyName(), STR.MOOSE) && (evt.getNewValue() != null)) {
             Memo memo = (Memo) evt.getNewValue();
-            conLog.info("Memo: {}", memo);
-            if (memo.isAction(STR.SCROLL)) {
-                if (memo.isMode(STR.DISPLACE)) scroll(memo.getV2Int());
+            conLog.trace("Memo: {}", memo);
+//            if (memo.isAction(STR.SCROLL)) {
+//                if (memo.isMode(STR.DISPLACE)) scroll(memo.getV2Int());
+//                if (memo.isMode(STR.STOP)) stopScroll();
+//            }
+
+            if (memo.isAction(STR.PAN)) {
+                if (memo.isMode(STR.DISPLACE)) {
+                    stopScroll(); // Stop flinging when displacing
+                    scroll(memo.getV2Int());
+                }
                 if (memo.isMode(STR.STOP)) stopScroll();
             }
 
             if (memo.isAction(STR.FLING)) {
                 continueScrolling = true;
-                fling(memo.getV2Float() * cnfgVelocityGain);
+                fling(memo.getV2Float() * config.flingVelocityGain);
             }
         }
     }

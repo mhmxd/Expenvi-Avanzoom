@@ -3,10 +3,7 @@ package ui;
 import com.kitfox.svg.SVGCache;
 import logs.MoLogger;
 import control.Server;
-import model.MoPlane;
-import model.MoPoint;
-import model.MoSVG;
-import model.PanZoomTrial;
+import model.*;
 import moose.Memo;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
@@ -24,11 +21,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalField;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static tool.Constants.*;
+import static java.lang.Math.*;
 
 public class PanZoomView extends JPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, PropertyChangeListener {
@@ -74,47 +70,52 @@ public class PanZoomView extends JPanel
     private boolean isCursorInside = false;
     private boolean isGrabbed = false;
     private Point dragPoint;
+    private boolean continuePanning; // To continue scrolling
 
     private final ScheduledExecutorService panner = Executors.newSingleThreadScheduledExecutor();
+    private Thread flingThread;
+
+    private double velocityX, velocityY; // px/s
 
     // Design
     private int dsgnPanEndThredholdW; // px
     private int dsgnPanEndThredholdH; // px
 
     // Config
-    private double cnfgZoomWheelNotchGain;
-    private double cnfgPanGain;
-    private double cnfgZoomGain;
-    private double cnfgFlingVelGain;
-    private double cnfgFlingVelFriction;
+    private Config config;
+//    private double cnfgZoomWheelNotchGain;
+//    private double cnfgPanGain;
+//    private double cnfgZoomGain;
+//    private double cnfgFlingVelGain;
+//    private double cnfgFlingVelFriction;
 
     //------------------------------------------------------------------
-    private class PanTask implements Runnable {
-        int velX, velY;
-        int dX, dY;
-
-        public PanTask(double vX, double vY) {
-            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the TaskType)
-            velY = (int) vY; // px/s -> px/(10)ms
-        }
-
-        @Override
-        public void run() {
-
-            while (Math.abs(velX) > 0 || Math.abs(velY) > 0) {
-                conLog.info("Run: vX, vY = {}, {}", velX, velY);
-                panDisplace(velX, velY);
-                velX *= (1 - cnfgFlingVelFriction);
-                velY *= (1 - cnfgFlingVelFriction);
-
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
+//    private class PanTask implements Runnable {
+//        int velX, velY;
+//        int dX, dY;
+//
+//        public PanTask(double vX, double vY) {
+//            velX = (int) vX; // px/s -> px/(10)ms (10ms is the freq. of running the TaskType)
+//            velY = (int) vY; // px/s -> px/(10)ms
+//        }
+//
+//        @Override
+//        public void run() {
+//
+//            while (Math.abs(velX) > 0 || Math.abs(velY) > 0) {
+//                conLog.info("Run: vX, vY = {}, {}", velX, velY);
+//                panDisplace(velX, velY);
+//                velX -= (int) (velX * config.flingVelocityFriction);
+//                velY -= (int) (velY * config.flingVelocityFriction);
+//
+//                try {
+//                    Thread.sleep(5);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        }
+//    }
 
     //------------------------------------------------------------------
 
@@ -146,22 +147,26 @@ public class PanZoomView extends JPanel
         dsgnPanEndThredholdH = DISP.mmToPxH(panEndThreshold);
     }
 
-    public void setPanConfig(double panGain) {
-        cnfgPanGain = panGain;
-        conLog.info("Pan config set!");
+    public void setConfig(Config config) {
+        this.config = config;
     }
 
-    public void setZoomConfig(double zoomWheelNotchGain, double zoomGain) {
-        cnfgZoomWheelNotchGain = zoomWheelNotchGain;
-        cnfgZoomGain = zoomGain;
-        conLog.info("Zoom config set!");
-    }
-
-    public void setFlingConfig(double flingVelGain, double flingVelFriction) {
-        cnfgFlingVelGain = flingVelGain;
-        cnfgFlingVelFriction = flingVelFriction;
-        conLog.info("Fling config set!");
-    }
+//    public void setPanConfig(double panGain) {
+//        cnfgPanGain = panGain;
+//        conLog.info("Pan config set!");
+//    }
+//
+//    public void setZoomConfig(double zoomWheelNotchGain, double zoomGain) {
+//        cnfgZoomWheelNotchGain = zoomWheelNotchGain;
+//        cnfgZoomGain = zoomGain;
+//        conLog.info("Zoom config set!");
+//    }
+//
+//    public void setFlingConfig(double flingVelGain, double flingVelFriction) {
+//        cnfgFlingVelGain = flingVelGain;
+//        cnfgFlingVelFriction = flingVelFriction;
+//        conLog.info("Fling config set!");
+//    }
 
     @Override
     public void setVisible(boolean aFlag) {
@@ -272,9 +277,35 @@ public class PanZoomView extends JPanel
      */
     public void panFling(double vX, double vY) {
         conLog.info("vX, vY = {}, {}", vX, vY);
+        velocityX += vX; // Cumulative velocity
+        velocityY += vY; // Cumulative velocity
+        flingThread = new Thread(() -> {
+            conLog.info("Thread!! {}, {}", continuePanning, Math.abs(velocityX) );
+            while (continuePanning &&
+                    abs(velocityX) > config.flingMinVelocity && abs(velocityY) > config.flingMinVelocity) {
+                final int dX = (int) (velocityX * 0.01); // 0.01s => 0.01Vel px
+                final int dY = (int) (velocityY * 0.01); // 0.01s => 0.01Vel px
+                panDisplace(dX, dY);
 
-        PanTask panTask = new PanTask(vX, vY);
-        panner.scheduleAtFixedRate(panTask, 0, 10, TimeUnit.MILLISECONDS);
+                velocityX -= velocityX * config.flingVelocityFriction; // Reduce velocity with friction
+                velocityY -= velocityY * config.flingVelocityFriction; // Reduce velocity with friction
+
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    break;
+                }
+            }
+        });
+        flingThread.start();
+
+//        PanTask panTask = new PanTask(vX, vY);
+//
+//        try {
+//            panner.scheduleAtFixedRate(panTask, 0, 10, TimeUnit.MILLISECONDS);
+//        } catch (RejectedExecutionException ex) {
+//            conLog.info("Pan task skipped");
+//        }
 
         // LOG
         eventLog.info("Pan Fling – vX, vY = {}, {}", vX, vY);
@@ -291,8 +322,15 @@ public class PanZoomView extends JPanel
         eventLog.info("Pan Displace – dX, dY = {}, {}", dX, dY);
         if (firstPan == Instant.MIN) firstPan = Instant.now();
 
-        planePos.translate((int) (dX * cnfgPanGain), (int) (dY * cnfgPanGain));
+        planePos.translate((int) (dX * config.panGain), (int) (dY * config.panGain));
         repaint();
+    }
+
+    public void stopPanning() {
+        conLog.info("Stop!");
+        continuePanning = false;
+        velocityX = 0;
+        velocityY = 0;
     }
 
     /**
@@ -333,8 +371,11 @@ public class PanZoomView extends JPanel
         conLog.info("zScale = {}", zScale);
         focalZoomPercent(centerPoint, zScale);
 
+        // This doesn't count as the first zoom!
+        firstZoom = Instant.MIN;
+
         // LOG
-        eventLog.info("Zoom – level = {}", newZoomLvl);
+//        eventLog.info("Zoom – level = {}", newZoomLvl);
     }
 
     public void focalZoomPercent(Point relPoint, double scale) {
@@ -436,7 +477,7 @@ public class PanZoomView extends JPanel
         trialLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
         Long panTrialTime = MoTime.tillNowMillis(firstPan);
         Long zoomTrialTime = MoTime.tillNowMillis(firstZoom);
-        trialLog.info("Trial Time – From Pan = {}, Zoom = {}", panTrialTime, zoomTrialTime);
+        conLog.info("Trial Time – From Pan = {}, Zoom = {}", panTrialTime, zoomTrialTime);
         trialLog.info("-----------------------------------------------------");
         eventLog.info("Close – Walls & Circles – {}, {}", areWallsInvisible, areCirclesVisible);
         eventLog.info("-----------------------------------------------------");
@@ -512,7 +553,7 @@ public class PanZoomView extends JPanel
 //        detent -= dZ; // Zoom-in -> must be +
         conLog.info("Rotation = {}, Prec. Rot = {}",
                 e.getWheelRotation(), e.getPreciseWheelRotation());
-        final double dZ = e.getPreciseWheelRotation() * cnfgZoomWheelNotchGain;
+        final double dZ = e.getPreciseWheelRotation() * config.zoomWheelNotchGain;
         zoom(dZ);
 //        svgSize = findSVGSize(-rot);
 //        repaint();
@@ -551,7 +592,7 @@ public class PanZoomView extends JPanel
                         // Stop
                         if (STR.equals(memo.getMode(), STR.STOP)) {
                             if (isCursorInside) {
-                                panner.shutdownNow();
+//                                panner.shutdownNow();
                             }
                         }
                     }
@@ -559,15 +600,16 @@ public class PanZoomView extends JPanel
                     case STR.FLING -> {
                         conLog.info("Flinging...");
                         if (isCursorInside) {
+                            continuePanning = true;
                             panFling(
-                                    memo.getV1Float() * cnfgFlingVelGain,
-                                    memo.getV2Float() * cnfgFlingVelGain);
+                                    memo.getV1Float() * config.flingVelocityGain,
+                                    memo.getV2Float() * config.flingVelocityGain);
                         }
                     }
 
                     case STR.ZOOM -> {
                         if (isCursorInside) {
-                            zoom(memo.getV1Int() * cnfgZoomGain);
+                            zoom(memo.getV1Int() * config.zoomGain);
                         }
                     }
                 }

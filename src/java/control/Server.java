@@ -14,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 public class Server {
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
@@ -154,7 +155,11 @@ public class Server {
      * Start the server
      */
     public void start() {
-        executor.execute(new ConnWaitRunnable());
+        try {
+            executor.execute(new ConnWaitRunnable());
+        } catch (RejectedExecutionException exp) {
+            conLog.warn("Connection task rejected.");
+        }
     }
 
     /**

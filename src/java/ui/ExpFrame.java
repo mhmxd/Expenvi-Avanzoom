@@ -18,19 +18,14 @@ import org.tinylog.TaggedLogger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 import static tool.Constants.*;
 
 public class ExpFrame extends JFrame {
-    private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
+    private final TaggedLogger conLog = Logger.tag(STR.CONSOLE);
 
     public static String pID = "1000";
-
-    private final String CONFIG_FILE_NAME = "config.properties";
-    public static PropertiesConfiguration config;
 
     // Zoom -----------------------------------------------
     public static int MAX_NOTCHES = 120; // Arbitrary (between Win 44 and Mac 300)
@@ -44,7 +39,7 @@ public class ExpFrame extends JFrame {
     public static double LR_MARGIN_MM = 20.0;
 
     // PanZoom ------------------------------------------------
-    public static final Color HIGHLIGHT_COLOR = Color.BLUE;
+    public static final Color HIGHLIGHT_COLOR = COLORS.BLUE;
     public static final int ZOOM_OUT_INFO_THRESHOLD = 60; // Zooming out more than this (zlvl < n) => info disappear
 
     // ------------------------------------------------------------------------------------------
@@ -77,30 +72,32 @@ public class ExpFrame extends JFrame {
 
         mapKeys();
 
-        loadConfig();
+//        addMouseListener(this);
+
+//        loadConfig();
     }
 
-    public void loadConfig() {
-        // Load config
-        try {
-            config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-                    .configure(new Parameters()
-                            .properties()
-                            .setFileName(CONFIG_FILE_NAME)
-                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
-                    .getConfiguration();
-
-//            Parameters params = new Parameters();
-//            FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
-//                    new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-//                            .configure(params.properties()
-//                                    .setFileName("config.properties")
-//                                    .setListDelimiterHandler(new DefaultListDelimiterHandler(',')));
-//            config = builder.getConfiguration();
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    public void loadConfig() {
+//        // Load config
+//        try {
+//            config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+//                    .configure(new Parameters()
+//                            .properties()
+//                            .setFileName(CONFIG_FILE_NAME)
+//                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
+//                    .getConfiguration();
+//
+////            Parameters params = new Parameters();
+////            FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+////                    new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+////                            .configure(params.properties()
+////                                    .setFileName("config.properties")
+////                                    .setListDelimiterHandler(new DefaultListDelimiterHandler(',')));
+////            config = builder.getConfiguration();
+//        } catch (ConfigurationException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     /**
      * Start the experiment
@@ -184,6 +181,8 @@ public class ExpFrame extends JFrame {
                 infoDialog.setVisible(false);
                 taskPanel.setVisible(true);
                 taskPanel.requestFocus();
+
+
             });
         }
     };
@@ -217,6 +216,5 @@ public class ExpFrame extends JFrame {
     private void mapKeys() {
 
     }
-
 
 }

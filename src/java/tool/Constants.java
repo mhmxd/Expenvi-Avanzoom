@@ -154,6 +154,7 @@ public class Constants {
 
         public static final String THRESHOLD = "threshold";
 
+        public static final String CONSOLE = "CONSOLE";
 
         /**
          * Null-safe String comparison

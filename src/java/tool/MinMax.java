@@ -19,7 +19,6 @@ public class MinMax {
      * @return True/False
      */
     public boolean isWithin(int value) {
-        System.out.println(min + " | " + value + " | " + max);
         return value <= max && value >= min;
     }
 

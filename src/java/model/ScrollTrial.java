@@ -14,4 +14,17 @@ public class ScrollTrial extends Trial {
         distance = dist;
         tolerance = indSize;
     }
+
+    @Override
+    public String toString() {
+        return "ScrollTrial{" +
+                "id=" + id +
+                ", blockNum=" + blockNum +
+                ", trialNum=" + trialNum +
+                ", finished=" + finished +
+                ", direction=" + direction +
+                ", distance=" + distance +
+                ", tolerance=" + tolerance +
+                '}';
+    }
 }

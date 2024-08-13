@@ -1,9 +1,12 @@
 package ui;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import logs.MoLogger;
 import logs.TrialInstants;
 import enums.TrialStatus;
 import model.Block;
+import model.Config;
+import model.Design;
 import model.Trial;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -17,6 +20,8 @@ import tool.MoDimension;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import static tool.Constants.*;
@@ -25,18 +30,13 @@ import static tool.Constants.*;
  * JlayeredPane to use indexes for objects
  */
 public class TaskPanel extends JLayeredPane {
-    private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
+    private final TaggedLogger conLog = Logger.tag(STR.CONSOLE);
 
     // Experiment
     protected ArrayList<Block> blocks = new ArrayList<>();
     protected Block activeBlock;
     protected Trial activeTrial;
-
-    // Config
-    private final String CONFIG_FILE_NAME = "config.properties";
-    private final String DESIGN_FILE_NAME = "design.properties";
-    public PropertiesConfiguration config;
-    public PropertiesConfiguration design;
+    protected Design expDesign;
 
     // UI
     JLabel progressLabel = new JLabel();
@@ -55,7 +55,7 @@ public class TaskPanel extends JLayeredPane {
         conLog.info("Width: {}", DISP.mmToPxH(10));
 
         // Lod the config file
-        loadConfigFile();
+//        loadConfigFile();
 
         // Set up progress label
         progressLabel.setBounds(
@@ -88,6 +88,9 @@ public class TaskPanel extends JLayeredPane {
                 configButton.getY() + 50,
                 2000, 50);
 
+        // Load design at the beginning
+        loadDesign();
+
         // Load config at the beginning
 //        try {
 //            loadConfig();
@@ -98,44 +101,52 @@ public class TaskPanel extends JLayeredPane {
 
     }
 
-    private void loadConfigFile() {
-        try {
-            config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-                    .configure(new Parameters()
-                            .properties()
-                            .setFileName(CONFIG_FILE_NAME)
-                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
-                    .getConfiguration();
-        } catch (ConfigurationException e) {
-            conLog.error("Problem in loading the config file!");
-            throw new RuntimeException(e);
-        }
-    }
+//    private void loadConfigFile() {
+//        try {
+//            config = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+//                    .configure(new Parameters()
+//                            .properties()
+//                            .setFileName(CONFIG_FILE_NAME)
+//                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
+//                    .getConfiguration();
+//        } catch (ConfigurationException e) {
+//            conLog.error("Problem in loading the config file!");
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     protected void loadConfig() {
         // Implemented by the children
     }
 
     protected void loadDesign() {
-
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            expDesign = objectMapper.readValue(
+                    new File("experiment-design.json"),
+                    Design.class);
+            conLog.info("Design: {}", expDesign);
+        } catch (IOException e) {
+            conLog.error("Could not read config json file!");
+            throw new RuntimeException(e);
+        }
     }
 
     protected void createBlocks() {
         // Load the experiment designs
-        try {
-            design =
-                    new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-                    .configure(new Parameters()
-                            .properties()
-                            .setFileName(DESIGN_FILE_NAME)
-                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
-                    .getConfiguration();
-        } catch (ConfigurationException e) {
-            conLog.error("Could not load experiment design factors!");
-            throw new RuntimeException(e);
-        }
+//        try {
+//            design =
+//                    new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+//                    .configure(new Parameters()
+//                            .properties()
+//                            .setFileName(DESIGN_FILE_NAME)
+//                            .setListDelimiterHandler(new DefaultListDelimiterHandler(',')))
+//                    .getConfiguration();
+//        } catch (ConfigurationException e) {
+//            conLog.error("Could not load experiment design factors!");
+//            throw new RuntimeException(e);
+//        }
 
-        // Implemented by the subclasses
     }
 
     /**
@@ -182,6 +193,7 @@ public class TaskPanel extends JLayeredPane {
                 conLog.info("Block Finished");
                 endBlock(); // Got to the next block (checks are done inside that method)
             } else { // More trials in the block
+                conLog.info("Trial-{} ended", activeTrial.trialNum);
                 activeTrial = activeBlock.getTrial(activeTrial.trialNum + 1);
                 showActiveTrial();
             }

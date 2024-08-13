@@ -1,0 +1,8 @@
+{
+  "flingVelocityGain": 2.0,
+  "flingVelocityFriction": 0.02,
+  "flingMinVelocity": 10,
+  "flingGain": 5,
+
+  "scrollWheelGain": 10.0
+}

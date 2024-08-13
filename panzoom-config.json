@@ -1,0 +1,12 @@
+{
+  "flingVelocityGain": 5.0,
+  "flingVelocityFriction": 0.2,
+  "flingMinVelocity": 10,
+  "flingGain": 5,
+
+  "zoomGain": 0.5,
+  "zoomWheelNotchGain": 0.5,
+
+  "panGain": 1.0,
+  "panFriction": 2.0
+}

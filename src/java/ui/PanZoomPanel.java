@@ -1,9 +1,9 @@
 package ui;
 
-import logs.MoLogger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enums.TaskType;
-import logs.TrialInstants;
 import enums.TrialStatus;
+import model.Config;
 import model.PanZoomBlock;
 import model.PanZoomTrial;
 import moose.Moose;
@@ -14,8 +14,8 @@ import tool.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
 
 import static tool.Constants.*;
@@ -25,6 +25,11 @@ public class PanZoomPanel
         implements MouseMotionListener, MouseWheelListener, MouseListener{
 
     private final TaggedLogger conLog = Logger.tag(getClass().getSimpleName());
+
+    // Files
+    private static final String CONFIG_FILE = "panzoom-config.json";
+    public static final String ZOOM_OUT_SVG_FILE_NAME = "zoom_out.svg";
+    public static final String ZOOM_IN_SVG_FILE_NAME = "zoom_in.svg";
 
     // Constants
     public final double VIEWPPORT_SIZE_mm = 250;
@@ -48,8 +53,7 @@ public class PanZoomPanel
 
     public static final int MAX_ZOOM_LEVEL = 1700;
 
-    public static final String ZOOM_OUT_SVG_FILE_NAME = "zoom_out.svg";
-    public static final String ZOOM_IN_SVG_FILE_NAME = "zoom_in.svg";
+
 
     // Experiment
     private final TaskType taskType;
@@ -142,46 +146,54 @@ public class PanZoomPanel
     protected void loadConfig() {
         //            super.loadConfig();
 
-        List<String> keyValues = new ArrayList<>();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Config panzoomConfig = objectMapper.readValue(
+                    new File("panzoom-config.json"),
+                    Config.class);
 
-        String key = String.join(".", STR.ZOOM, STR.WHEEL_NOTCH, STR.GAIN);
-        final double zoomWheelNotchGain = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", zoomWheelNotchGain));
+            // Set the config in scroll pane
+            panZoomView.setConfig(panzoomConfig);
 
-        key = String.join(".", STR.PAN, STR.GAIN);
-        final double panGain = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", panGain));
+            // Display values
+            configLabel.setText(panzoomConfig.toString());
 
-        key = String.join(".", STR.ZOOM, STR.GAIN);
-        final double zoomGain = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", zoomGain));
-
-        key = String.join(".", STR.FLING, STR.VELOCITY, STR.GAIN);
-        final double flingVelGain = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", flingVelGain));
-
-        key = String.join(".", STR.FLING, STR.VELOCITY, STR.FRICTION);
-        final double flingVelFriction = config.getDouble(key);
-        keyValues.add(key + " = " + String.format("%.2f", flingVelFriction));
-
-        // Set the config in the view
-        panZoomView.setPanConfig(panGain);
-        panZoomView.setZoomConfig(zoomWheelNotchGain, zoomGain);
-        panZoomView.setFlingConfig(flingVelGain, flingVelFriction);
-
-        // Show config in the label
-        configLabel.setText(String.join(" | ", keyValues));
+        } catch (IOException e) {
+            conLog.error("Could not read config json file!");
+            throw new RuntimeException(e);
+        }
+//        List<String> keyValues = new ArrayList<>();
+//
+//        String key = String.join(".", STR.ZOOM, STR.WHEEL_NOTCH, STR.GAIN);
+//        final double zoomWheelNotchGain = config.getDouble(key);
+//        keyValues.add(key + " = " + String.format("%.2f", zoomWheelNotchGain));
+//
+//        key = String.join(".", STR.PAN, STR.GAIN);
+//        final double panGain = config.getDouble(key);
+//        keyValues.add(key + " = " + String.format("%.2f", panGain));
+//
+//        key = String.join(".", STR.ZOOM, STR.GAIN);
+//        final double zoomGain = config.getDouble(key);
+//        keyValues.add(key + " = " + String.format("%.2f", zoomGain));
+//
+//        key = String.join(".", STR.FLING, STR.VELOCITY, STR.GAIN);
+//        final double flingVelGain = config.getDouble(key);
+//        keyValues.add(key + " = " + String.format("%.2f", flingVelGain));
+//
+//        key = String.join(".", STR.FLING, STR.VELOCITY, STR.FRICTION);
+//        final double flingVelFriction = config.getDouble(key);
+//        keyValues.add(key + " = " + String.format("%.2f", flingVelFriction));
+//
+//        // Set the config in the view
+//        panZoomView.setPanConfig(panGain);
+//        panZoomView.setZoomConfig(zoomWheelNotchGain, zoomGain);
+//        panZoomView.setFlingConfig(flingVelGain, flingVelFriction);
+//
+//        // Show config in the label
+//        configLabel.setText(String.join(" | ", keyValues));
 
     }
 
-    @Override
-    protected void loadDesign() {
-        String key = String.join(".", STR.PANZOOM, STR.PAN, STR.END, STR.THRESHOLD);
-        final double panEndThreshold = design.getDouble(key);
-
-        // Set the design property in the view
-        panZoomView.setDesignProperties(panEndThreshold);
-    }
 
     @Override
     public void setVisible(boolean aFlag) {
@@ -196,8 +208,7 @@ public class PanZoomPanel
     protected void createBlocks() {
         super.createBlocks();
 
-        final String key = String.join(".", STR.PANZOOM, STR.NUM, STR.BLOCKS);
-        for (int b = 0; b < design.getInt(key); b++) {
+        for (int b = 0; b < expDesign.numPanZoomBlocks; b++) {
             blocks.add(new PanZoomBlock(b + 1));
         }
     }
@@ -242,9 +253,8 @@ public class PanZoomPanel
         progressLabel.setText("Trial: " + activeTrial.trialNum + " – " + "Block: " + activeTrial.blockNum);
         progressLabel.setVisible(true);
 
-        // Load config & design
+        // Load config
         loadConfig();
-        loadDesign();
 
         // Log
 //        MoLogger.get().activateTrial(activeTrial);
